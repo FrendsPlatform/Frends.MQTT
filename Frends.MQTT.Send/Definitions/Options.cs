@@ -1,4 +1,4 @@
-﻿namespace Frends.MQTT.Send.Definitions
+namespace Frends.MQTT.Send.Definitions
 {
     using System.ComponentModel;
     using System.ComponentModel.DataAnnotations;
