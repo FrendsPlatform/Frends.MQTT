@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "dgSpecHash": "skTNOdEiA9c=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Jakub\\Frends.MQTT.Send\\Frends.MQTT.Send\\Frends.MQTT.Send.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Jakub\\.nuget\\packages\\mqttnet\\4.0.0.167\\mqttnet.4.0.0.167.nupkg.sha512"
+  ],
+  "logs": [
+    {
+      "code": "NU1603",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Frends.MQTT.Send depends on MQTTnet (>= 4.0.0) but MQTTnet 4.0.0 was not found. MQTTnet 4.0.0.167 was resolved instead.",
+      "libraryId": "MQTTnet",
+      "targetGraphs": [
+        "net6.0"
+      ]
+    }
+  ]
+}
