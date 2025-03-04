@@ -1,18 +1,14 @@
-﻿namespace Frends.MQTT.Send.Definitions;
-
-/// <summary>
-/// Result class usually contains properties of the return object.
-/// </summary>
-public class Result
+﻿namespace Frends.MQTT.Send.Definitions
 {
-    internal Result(string output)
+    public class Result
     {
-        this.Output = output;
-    }
+        public bool Success { get; }
+        public string Details { get; }
 
-    /// <summary>
-    /// Contains the input repeated the specified number of times.
-    /// </summary>
-    /// <example>Example of the output</example>
-    public string Output { get; private set; }
+        public Result(bool success, string details)
+        {
+            Success = success;
+            Details = details;
+        }
+    }
 }

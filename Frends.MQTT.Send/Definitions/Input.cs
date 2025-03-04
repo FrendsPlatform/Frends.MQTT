@@ -36,13 +36,5 @@
         /// <example>your_message</example>
         [Required(ErrorMessage = "Message is required")]
         public string Message { get; set; }
-
-        /// <summary>
-        /// Additional content (optional).
-        /// </summary>
-        /// <example>Some example of the expected value</example>
-        [DisplayFormat(DataFormatString = "Text")]
-        [DefaultValue("Lorem ipsum dolor sit amet.")]
-        public string Content { get; set; } = "Lorem ipsum dolor sit amet.";
     }
 }

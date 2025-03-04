@@ -6,8 +6,6 @@ using MQTTnet.Client;
 
 public class MqttSender
 {
-    public MqttSender() { }
-
     public async Task SendMqttMessageAsync(
         string brokerAddress,
         int brokerPort,
@@ -34,15 +32,25 @@ public class MqttSender
                 .Build();
 
             await mqttClient.PublishAsync(mqttMessage, cancellationToken);
-            await mqttClient.DisconnectAsync(new MqttClientDisconnectOptions());
         }
         catch (OperationCanceledException)
         {
-            // Handle operation cancellation
+            
         }
         catch (Exception ex)
         {
             throw new MqttSenderException("Failed to send MQTT message", ex);
         }
+        finally
+        {
+            await mqttClient.DisconnectAsync(new MqttClientDisconnectOptions());
+        }
     }
+}
+
+
+public class MqttSenderException : Exception
+{
+    public MqttSenderException(string message, Exception innerException)
+        : base(message, innerException) { }
 }

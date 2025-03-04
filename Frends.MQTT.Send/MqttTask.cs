@@ -6,18 +6,6 @@ using Frends.MQTT.Send.Definitions;
 
 namespace Frends.MQTT.Send
 {
-    public class Result
-    {
-        public bool Success { get; }
-        public string Details { get; }
-
-        public Result(bool success, string details)
-        {
-            Success = success;
-            Details = details;
-        }
-    }
-
     public static class MqttTask
     {
         public static async Task<Result> SendMessageAsync([PropertyTab] Input input, CancellationToken cancellationToken)
@@ -26,6 +14,14 @@ namespace Frends.MQTT.Send
             {
                 var mqttSender = new MqttSender();
                 await mqttSender.SendMqttMessageAsync(input.BrokerAddress, input.BrokerPort, input.Topic, input.Message, cancellationToken);
+
+                
+                if (!string.IsNullOrEmpty(input.Content))
+                {
+                    
+                    Console.WriteLine($"Additional Content: {input.Content}");
+                }
+
                 return new Result(true, "Message sent successfully");
             }
             catch (Exception ex)
