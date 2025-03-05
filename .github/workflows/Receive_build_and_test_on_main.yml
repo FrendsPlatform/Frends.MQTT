@@ -9,8 +9,13 @@ on:
   workflow_dispatch:
 
 jobs:
+  set_up_sdk8:
+    name: Set up .NET 8
+    uses: actions/setup-dotnet@v3
+    with:
+      dotnet-version: '8.0.x'
   build:
-    uses: FrendsPlatform/FrendsTasks/.github/workflows/build_main.yml@main
+    uses: FrendsPlatform/FrendsTasks/.github/workflows/linux_build_main.yml@main
     with:
       workdir: Frends.MQTT.Receive
       env_var_name_1: MQTT_publicBrokerAddress
