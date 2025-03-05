@@ -11,9 +11,12 @@ on:
 jobs:
   set_up_sdk8:
     name: Set up .NET 8
-    uses: actions/setup-dotnet@v3
-    with:
-      dotnet-version: '8.0.x'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
   build:
     uses: FrendsPlatform/FrendsTasks/.github/workflows/linux_build_main.yml@main
     with:
