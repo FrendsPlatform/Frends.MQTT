@@ -40,7 +40,7 @@ internal class UnitTests
             BrokerPort = 1883, // valid port number
             ClientId = "f86c1a910f1940979fadeaf785d6b474", // starts a new session
             Topic = "example topic",
-            HowLongTheTaskListensForMessages = 120,
+            HowLongTheTaskListensForMessages = 5,
         };
 
         // start a session to create an inbox
@@ -96,7 +96,7 @@ internal class UnitTests
             await Task.Delay(10000);
 
             // now collect the sent message from the inbox
-            input.HowLongTheTaskListensForMessages = 20;
+            input.HowLongTheTaskListensForMessages = 10;
             var resultOfReceivingMessage = await MQTT.ConnectAndReceive(input, default);
 
             foreach(var message in resultOfReceivingMessage.MessagesList)

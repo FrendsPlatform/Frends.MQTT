@@ -3,10 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Frends.MQTT.Receive", "Frends.MQTT.Connect\Frends.MQTT.Receive.csproj", "{35C305C0-8108-4A98-BB1D-AFE5C926239E}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Frends.MQTT.Receive.Tests", "Frends.MQTT.Connect.Tests\Frends.MQTT.Receive.Tests.csproj", "{8CA92187-8E4F-4414-803B-EC899479022E}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{78F7F22E-6E20-4BCE-8362-0C558568B729}"
 	ProjectSection(SolutionItems) = preProject
 		CHANGELOG.md = CHANGELOG.md
@@ -16,20 +12,24 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Frends.MQTT.Receive", "Frends.MQTT.Receive\Frends.MQTT.Receive.csproj", "{375416C7-E227-4773-B8F2-218B40BE69DC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Frends.MQTT.Receive.Tests", "Frends.MQTT.Receive.Tests\Frends.MQTT.Receive.Tests.csproj", "{1B0B6C69-74AA-4728-8757-9F1D301BC1BF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{35C305C0-8108-4A98-BB1D-AFE5C926239E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{35C305C0-8108-4A98-BB1D-AFE5C926239E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{35C305C0-8108-4A98-BB1D-AFE5C926239E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{35C305C0-8108-4A98-BB1D-AFE5C926239E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8CA92187-8E4F-4414-803B-EC899479022E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8CA92187-8E4F-4414-803B-EC899479022E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8CA92187-8E4F-4414-803B-EC899479022E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8CA92187-8E4F-4414-803B-EC899479022E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{375416C7-E227-4773-B8F2-218B40BE69DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{375416C7-E227-4773-B8F2-218B40BE69DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{375416C7-E227-4773-B8F2-218B40BE69DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{375416C7-E227-4773-B8F2-218B40BE69DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B0B6C69-74AA-4728-8757-9F1D301BC1BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B0B6C69-74AA-4728-8757-9F1D301BC1BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B0B6C69-74AA-4728-8757-9F1D301BC1BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B0B6C69-74AA-4728-8757-9F1D301BC1BF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
