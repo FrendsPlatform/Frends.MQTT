@@ -30,8 +30,9 @@
             var options = new MqttClientOptionsBuilder()
                 .WithTcpServer(taskInput.BrokerAddress, taskInput.BrokerPort)
                 .WithCleanSession(false)
-                .WithWillQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.ExactlyOnce)
-                .WithKeepAlivePeriod(TimeSpan.FromSeconds(65535))
+                .WithWillQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.AtMostOnce)
+                .WithSessionExpiryInterval(sessionExpiryInterval: uint.MaxValue)
+                .WithKeepAlivePeriod(TimeSpan.FromSeconds(taskInput.HowLongTheTaskListensForMessages))
                 .WithClientId(clientID)
                 .Build();
 
