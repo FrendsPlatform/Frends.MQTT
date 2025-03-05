@@ -12,6 +12,8 @@ using System.Diagnostics;
 [TestFixture]
 internal class UnitTests
 {
+    private readonly string _brokerAddress = Environment.GetEnvironmentVariable("MQTT_publicBrokerAddress");
+
     [Test]
     public async Task ShouldFailWhenConnectingToIncorrectAddress()
     {
@@ -34,12 +36,13 @@ internal class UnitTests
     {
         var input = new Input
         {
-            BrokerAddress = @"broker.hivemq.com", //free public MQTT broker
+            BrokerAddress = _brokerAddress, //free public MQTT broker
             BrokerPort = 1883, // valid port number
             ClientId = "f86c1a910f1940979fadeaf785d6b474", // starts a new session
             Topic = "example topic",
-            HowLongTheTaskListensForMessages = 5,
+            HowLongTheTaskListensForMessages = 120,
         };
+
         // start a session to create an inbox
         var result = await MQTT.ConnectAndReceive(input, default);
 
