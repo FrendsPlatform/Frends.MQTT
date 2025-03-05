@@ -1,11 +1,11 @@
-﻿namespace Frends.MQTT.Connect
+﻿namespace Frends.MQTT.Receive
 {
     using System;
     using System.Collections.Generic;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using Frends.MQTT.Connect.Definitions;
+    using Frends.MQTT.Receive.Definitions;
     using MQTTnet;
     using MQTTnet.Protocol;
 

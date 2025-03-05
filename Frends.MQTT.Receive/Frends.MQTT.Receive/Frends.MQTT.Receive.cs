@@ -1,8 +1,8 @@
-﻿namespace Frends.MQTT.Connect;
+﻿namespace Frends.MQTT.Receive;
 using System;
 using System.ComponentModel;
 using System.Threading;
-using Frends.MQTT.Connect.Definitions;
+using Frends.MQTT.Receive.Definitions;
 using System.Threading.Tasks;
 
 /// <summary>

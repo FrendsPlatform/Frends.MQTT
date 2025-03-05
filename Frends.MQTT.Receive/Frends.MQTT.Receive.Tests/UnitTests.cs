@@ -1,7 +1,7 @@
-namespace Frends.MQTT.Connect.Tests;
+namespace Frends.MQTT.Receive.Tests;
 
 using System.Threading.Tasks;
-using Frends.MQTT.Connect.Definitions;
+using Frends.MQTT.Receive.Definitions;
 using NUnit.Framework;
 using MQTTnet;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
@@ -36,7 +36,7 @@ internal class UnitTests
     {
         var input = new Input
         {
-            BrokerAddress = _brokerAddress, //free public MQTT broker
+            BrokerAddress = _brokerAddress, // free public MQTT broker
             BrokerPort = 1883, // valid port number
             ClientId = "f86c1a910f1940979fadeaf785d6b474", // starts a new session
             Topic = "example topic",
