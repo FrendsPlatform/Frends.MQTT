@@ -38,10 +38,10 @@
 
             var messagesList = new List<string>();
 
-            // in the future, any incoming messages will go on the queue
+            // in the future, any incoming messages will go on the list
             mqttClient.ApplicationMessageReceivedAsync += e =>
             {
-                // add  incoming message to queue
+                // add  incoming message to list
                 var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
                 messagesList.Add(payload);
                 return Task.CompletedTask;
