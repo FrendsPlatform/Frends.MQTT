@@ -42,5 +42,4 @@ public class Input
     /// When connecting for the first time, what topic to listen to.
     /// </summary>
     public string Topic { get; set; }
-
 }
