@@ -99,7 +99,7 @@ internal class UnitTests
             input.HowLongTheTaskListensForMessages = 10;
             var resultOfReceivingMessage = await MQTT.ConnectAndReceive(input, default);
 
-            foreach(var message in resultOfReceivingMessage.MessagesList)
+            foreach (var message in resultOfReceivingMessage.MessagesList)
             {
                 Debug.WriteLine(message);
             }
