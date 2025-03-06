@@ -11,7 +11,7 @@ on:
 jobs:
   set_up_sdk8:
     name: Set up .NET 8
-    runs-on: ubuntu-latest
+    runs-on: linux
     steps:
       - name: Set up .NET 8
         uses: actions/setup-dotnet@v3
@@ -24,5 +24,4 @@ jobs:
       env_var_name_1: MQTT_publicBrokerAddress
     secrets:
       badge_service_api_key: ${{ secrets.BADGE_SERVICE_API_KEY }}
-      env_var_value_1: ${{ secrets.MQTT_publicBrokerAddress }}
-      
+      env_var_value_1: ${{ secrets.MQTT_publicBrokerAddress }}      
