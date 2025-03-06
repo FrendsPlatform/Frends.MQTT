@@ -2,7 +2,7 @@ name: Receive_build_test
 
 on:
   push:
-    branches-ignore:    
+    branches-ignore:
       - main
     paths:
       - 'Frends.MQTT.Receive/**'

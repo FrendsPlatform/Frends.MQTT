@@ -2,7 +2,7 @@ name: Receive_build_main
 
 on:
   push:
-    branches:    
+    branches:
       - main
     paths:
       - 'Frends.MQTT.Receive/**'
@@ -17,4 +17,3 @@ jobs:
     secrets:
       badge_service_api_key: ${{ secrets.BADGE_SERVICE_API_KEY }}
       env_var_value_1: ${{ secrets.MQTT_publicBrokerAddress }}
-      
