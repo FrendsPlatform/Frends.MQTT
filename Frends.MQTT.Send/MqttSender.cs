@@ -23,7 +23,7 @@ public class MqttSender
             var mqttMessage = new MqttApplicationMessageBuilder()
                 .WithTopic(topic)
                 .WithPayload(message)
-                .WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce)
+                .WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.AtMostOnce)
                 .Build();
 
             await mqttClient.PublishAsync(mqttMessage, cancellationToken);
