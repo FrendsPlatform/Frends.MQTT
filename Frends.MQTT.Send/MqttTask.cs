@@ -14,7 +14,7 @@ namespace Frends.MQTT.Send
             {
                 var mqttSender = new MqttSender();
                 await mqttSender.SendMqttMessageAsync(input.BrokerAddress, input.BrokerPort, input.Topic, input.Message, cancellationToken);
-                                
+
                 if (!string.IsNullOrEmpty(input.Topic))
                 {
                     Console.WriteLine($"Additional Content: {input.Topic}");
