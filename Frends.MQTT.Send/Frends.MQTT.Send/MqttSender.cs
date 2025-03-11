@@ -1,18 +1,14 @@
+using Frends.MQTT.Send.Definitions;
 using MQTTnet;
 public class MqttSender
 {
-    public async Task SendMqttMessageAsync(
-        string brokerAddress,
-        int brokerPort,
-        string topic,
-        string message,
-        CancellationToken cancellationToken)
+    public async Task Send(Input input, CancellationToken cancellationToken)
     {
         var factory = new MqttClientFactory();
         using var mqttClient = factory.CreateMqttClient();
 
         var options = new MqttClientOptionsBuilder()
-            .WithTcpServer(brokerAddress, brokerPort)
+            .WithTcpServer(input.BrokerAddress, input.BrokerPort)
             .WithCleanSession()
             .Build();
 
@@ -21,8 +17,8 @@ public class MqttSender
             await mqttClient.ConnectAsync(options, cancellationToken);
 
             var mqttMessage = new MqttApplicationMessageBuilder()
-                .WithTopic(topic)
-                .WithPayload(message)
+                .WithTopic(input.Topic)
+                .WithPayload(input.Message)
                 .WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.AtMostOnce)
                 .Build();
 

@@ -30,7 +30,7 @@ namespace Frends.MQTT.Send.Tests
                 Message = "Test message",
             };
 
-            var result = await MqttTask.SendMessageAsync(input, CancellationToken.None);
+            var result = await MQTT.SendMessageAsync(input, CancellationToken.None);
 
             Assert.IsFalse(result.Success);
             Assert.IsTrue(result.Details.Contains("Failed"));
@@ -51,7 +51,7 @@ namespace Frends.MQTT.Send.Tests
                 Message = "Test message FRENDS",
             };
 
-            var result = await MqttTask.SendMessageAsync(input, CancellationToken.None);
+            var result = await MQTT.SendMessageAsync(input, CancellationToken.None);
 
             Assert.IsFalse(result.Success);
         }
@@ -71,7 +71,7 @@ namespace Frends.MQTT.Send.Tests
                 Message = "Test message FRENDS",
             };
 
-            var result = await MqttTask.SendMessageAsync(input, CancellationToken.None);
+            var result = await MQTT.SendMessageAsync(input, CancellationToken.None);
 
             Assert.IsTrue(result.Success);
         }
