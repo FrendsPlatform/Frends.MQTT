@@ -25,9 +25,7 @@ public class Input
     public int BrokerPort { get; set; }
 
     /// <summary>
-    /// How many seconds the task (client) will live and process messages before termination and disposal.
-    /// Message will be coming down at unknown times through this period.
-    /// If you don't connect to the broker often enough, it will terminate the connection and messages/subscriptions!
+    /// Specifies how many seconds the task (client) will live and process messages.
     /// </summary>
     [Required(ErrorMessage = "Keep alive value is required")]
     [Range(1, 65535, ErrorMessage = "Lifetime must be between 1 and 65535")]
@@ -39,7 +37,7 @@ public class Input
     public string ClientId { get; set; }
 
     /// <summary>
-    /// When connecting for the first time, what topic to listen to.
+    /// The topic the client subscribes to when connecting.
     /// </summary>
     public string Topic { get; set; }
 }

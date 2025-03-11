@@ -9,35 +9,20 @@ public class Result
 {
     internal Result(
         bool success,
-        IMqttClient newlyCreatedClient,
         string clientID,
-        MqttClientConnectResult serverResponse,
         string error,
         List<string> messagesList)
     {
         this.Success = success;
-        this.ConnectionServerResponse = serverResponse;
-        this.NewlyCreatedClient = newlyCreatedClient;
         this.CurrentClientId = clientID;
         this.MessagesList = messagesList;
         this.Error = error;
     }
 
     /// <summary>
-    /// The interface to the newly created MQTT client, or null if connection failed;
-    /// doesn't work in Frends GUI but contains useful debugging information
-    /// </summary>
-    public IMqttClient NewlyCreatedClient { get; private set; }
-
-    /// <summary>
     /// Whether connection to an MQTT broker was successful or not
     /// </summary>
     public bool Success { get; private set; }
-
-    /// <summary>
-    /// Details of the successful IMQTT connection to a broker, or null if it failed.
-    /// </summary>
-    public MqttClientConnectResult ConnectionServerResponse { get; private set; }
 
     /// <summary>
     /// Error (s) if connecting to broker failed

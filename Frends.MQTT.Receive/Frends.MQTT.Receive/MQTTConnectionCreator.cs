@@ -11,10 +11,6 @@
 
     internal class MQTTConnectionCreator
     {
-        public MQTTConnectionCreator()
-        {
-        }
-
         public async Task<Result> ConnectToBroker(
             Input taskInput,
             CancellationToken cancellationToken)
@@ -56,11 +52,11 @@
             }
             catch (OperationCanceledException cException)
             {
-                return new Result(success: false, newlyCreatedClient: null, clientID: clientID, serverResponse: null, cException.Message, messagesList: messagesList);
+                return new Result(success: false, clientID: clientID, cException.Message, messagesList: messagesList);
             }
             catch (Exception ex)
             {
-                return new Result(success: false, newlyCreatedClient: null, clientID: clientID, serverResponse: null, error: ex.Message, messagesList: messagesList);
+                return new Result(success: false, clientID: clientID, error: ex.Message, messagesList: messagesList);
             }
 
             // after connecting, immediately SUBSCRIBE
@@ -78,11 +74,11 @@
             }
             catch (OperationCanceledException cException)
             {
-                return new Result(success: false, newlyCreatedClient: null, clientID: clientID, serverResponse: null, cException.Message, messagesList: messagesList);
+                return new Result(success: false, clientID: clientID, cException.Message, messagesList: messagesList);
             }
             catch (Exception e)
             {
-                return new Result(success: false, newlyCreatedClient: null, clientID: clientID, serverResponse: null, error: e.Message, messagesList: messagesList);
+                return new Result(success: false, clientID: clientID, error: e.Message, messagesList: messagesList);
             }
 
             // collect messages for some seconds, then dispose at the curly bracket
@@ -90,9 +86,7 @@
             await Task.Delay(taskInput.HowLongTheTaskListensForMessages * 1000, cancellationToken);
             var result = new Result(
                 success: true,
-                newlyCreatedClient: mqttClient,
                 clientID: clientID,
-                serverResponse: connectionResponse,
                 error: string.Empty,
                 messagesList: messagesList);
 

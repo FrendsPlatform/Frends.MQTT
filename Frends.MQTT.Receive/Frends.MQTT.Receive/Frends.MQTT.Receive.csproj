@@ -13,7 +13,7 @@
 	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
 	  <Description>Connects to an MQTT broker, and starts a session to listen to messages. The session will persist for some time after the task has finished </Description>
 	  <PackageProjectUrl>https://frends.com/</PackageProjectUrl>
-	  <RepositoryUrl>https://github.com/FrendsPlatform/Frends.MQTT/tree/main/Frends.MQTT.Connect</RepositoryUrl>
+	  <RepositoryUrl>https://github.com/FrendsPlatform/Frends.MQTT/tree/main/Frends.MQTT.Receive</RepositoryUrl>
 	  <OutputType>Library</OutputType>
   </PropertyGroup>
 

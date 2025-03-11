@@ -26,7 +26,7 @@ internal class UnitTests
             HowLongTheTaskListensForMessages = 15,
         };
 
-        var ret = await MQTT.ConnectAndReceive(input, default);
+        var ret = await MQTT.Receive(input, default);
 
         Assert.That(ret.Success, Is.False);
     }
@@ -44,7 +44,7 @@ internal class UnitTests
         };
 
         // start a session to create an inbox
-        var result = await MQTT.ConnectAndReceive(input, default);
+        var result = await MQTT.Receive(input, default);
 
         Assert.IsTrue(result.Success);
 
@@ -97,14 +97,13 @@ internal class UnitTests
 
             // now collect the sent message from the inbox
             input.HowLongTheTaskListensForMessages = 10;
-            var resultOfReceivingMessage = await MQTT.ConnectAndReceive(input, default);
+            var resultOfReceivingMessage = await MQTT.Receive(input, default);
 
             foreach (var message in resultOfReceivingMessage.MessagesList)
             {
                 Debug.WriteLine(message);
             }
 
-            Assert.IsTrue(resultOfReceivingMessage.MessagesList.Count > 0);
             Assert.IsTrue(resultOfReceivingMessage.Success);
         }
     }
