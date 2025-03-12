@@ -1,20 +1,30 @@
 namespace Frends.MQTT.Send.Tests
 {
     using System;
+    using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
+    using System.Xml.Linq;
     using Frends.MQTT.Send;
     using Frends.MQTT.Send.Definitions;
     using NUnit.Framework;
 
     /// <summary>
-    /// These unit tests check if the Send method fails with incorrect parameters and succeeds with correct ones.
+    /// These unit tests require a localhost MQTT server to run.
+    /// To install mosquitto in docker, run:
+    /// docker pull eclipse-mosquitto
+    /// docker network create mosquitto_network
+    /// docker run -d \
+    /// --name mosquitto \
+    /// --network mosquitto_network \
+    /// -p 1883:1883 \
+    /// -p 9001:9001 \
+    /// eclipse-mosquitto
+    /// Alternatively, install mosquitto locally from https://mosquitto.org/download/.
     /// </summary>
     [TestFixture]
     public class MqttTaskTests
     {
-        private readonly string brokerAddress = Environment.GetEnvironmentVariable("MQTT_publicBrokerAddress");
-
         /// <summary>
         /// This test attempts to connect to an invalid broker address.
         /// </summary>
@@ -45,7 +55,7 @@ namespace Frends.MQTT.Send.Tests
         {
             var input = new Input
             {
-                BrokerAddress = this.brokerAddress,
+                BrokerAddress = "localhost", // dockerized Mosquitto broker
                 BrokerPort = 99999, // Invalid port number
                 Topic = "test/topic",
                 Message = "Test message FRENDS",
@@ -65,7 +75,7 @@ namespace Frends.MQTT.Send.Tests
         {
             var input = new Input
             {
-                BrokerAddress = this.brokerAddress,
+                BrokerAddress = "localhost", // dockerized Mosquitto broker
                 BrokerPort = 1883, // Invalid port number
                 Topic = "test/topic",
                 Message = "Test message FRENDS",
