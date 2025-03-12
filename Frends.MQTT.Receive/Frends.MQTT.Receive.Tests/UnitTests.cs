@@ -9,6 +9,19 @@ using System.Threading;
 using System;
 using System.Diagnostics;
 
+/// <summary>
+/// These unit tests require a localhost MQTT server to run.
+/// To install mosquitto in docker, run:
+/// docker pull eclipse-mosquitto
+/// docker network create mosquitto_network
+/// docker run -d \
+/// --name mosquitto \
+/// --network mosquitto_network \
+/// -p 1883:1883 \
+/// -p 9001:9001 \
+/// eclipse-mosquitto
+/// Alternatively, install mosquitto locally from https://mosquitto.org/download/.
+/// </summary>
 [TestFixture]
 internal class UnitTests
 {
