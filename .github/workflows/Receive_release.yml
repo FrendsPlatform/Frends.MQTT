@@ -5,6 +5,12 @@ on:
 
 jobs:
   build:
+    services:
+      mosquitto:
+        image: eclipse-mosquitto:latest
+        ports:
+          - 1883:1883
+        options: --health-cmd="mosquitto -v" --health-timeout=5m --health-retries=3
     uses: FrendsPlatform/FrendsTasks/.github/workflows/release.yml@main
     with:
       workdir: Frends.MQTT.Receive

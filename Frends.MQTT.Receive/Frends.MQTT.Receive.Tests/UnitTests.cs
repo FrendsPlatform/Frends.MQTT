@@ -12,8 +12,6 @@ using System.Diagnostics;
 [TestFixture]
 internal class UnitTests
 {
-    private readonly string brokerAddress = Environment.GetEnvironmentVariable("MQTT_publicBrokerAddress");
-
     [Test]
     public async Task ShouldFailWhenConnectingToIncorrectAddress()
     {
@@ -32,11 +30,11 @@ internal class UnitTests
     }
 
     [Test]
-    public async Task ShouldSuccessfullyConnectToPublicBroker()
+    public async Task ShouldSuccessfullyConnectToBroker()
     {
         var input = new Input
         {
-            BrokerAddress = brokerAddress, // free public MQTT broker
+            BrokerAddress = "localhost", // Mosquitto running in docker
             BrokerPort = 1883, // valid port number
             ClientId = "f86c1a910f1940979fadeaf785d6b474", // starts a new session
             Topic = "example topic",
