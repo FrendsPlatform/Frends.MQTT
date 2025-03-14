@@ -2,6 +2,9 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Net.Security;
+    using System.Security.Authentication;
+    using System.Security.Cryptography.X509Certificates;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
@@ -23,14 +26,45 @@
                 clientID = Guid.NewGuid().ToString("N");
             else clientID = taskInput.ClientId;
 
+            MQTTnet.Protocol.MqttQualityOfServiceLevel qos = (MqttQualityOfServiceLevel)taskInput.QoS;
+
             var options = new MqttClientOptionsBuilder()
                 .WithTcpServer(taskInput.BrokerAddress, taskInput.BrokerPort)
                 .WithCleanSession(false)
-                .WithWillQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.AtMostOnce)
+                .WithWillQualityOfServiceLevel(qos)
                 .WithSessionExpiryInterval(sessionExpiryInterval: uint.MaxValue)
                 .WithKeepAlivePeriod(TimeSpan.FromSeconds(taskInput.HowLongTheTaskListensForMessages))
-                .WithClientId(clientID)
-                .Build();
+                .WithClientId(clientID);
+
+            if (taskInput.UseTLS12)
+            {
+                var tlsOptions = new MqttClientTlsOptionsBuilder().WithCertificateValidationHandler (
+                    o =>
+                    {
+                        // how do we proceed with the certificate the server sent?
+                        if (o.SslPolicyErrors != System.Net.Security.SslPolicyErrors.None)
+                        {
+                            if (taskInput.AllowInvalidCertificate)
+                                return true;
+                            else
+                                throw new InvalidCredentialException(o.SslPolicyErrors.ToString());
+                        }
+                        else
+                        {
+                            return true;
+                        }
+                    });
+
+                tlsOptions.WithSslProtocols(SslProtocols.Tls12);
+
+                // build TLS settings
+                options.WithTlsOptions(tlsOptions.Build());
+            }
+
+            if (!string.IsNullOrEmpty(taskInput.Username) && !string.IsNullOrEmpty(taskInput.Password))
+            {
+                options.WithCredentials(taskInput.Username, taskInput.Password);
+            }
 
             var messagesList = new List<string>();
 
@@ -48,7 +82,7 @@
             {
                 // try to CONNECT
                 // if unsuccessful, this will throw an exception
-                connectionResponse = await mqttClient.ConnectAsync(options, cancellationToken);
+                connectionResponse = await mqttClient.ConnectAsync(options.Build(), cancellationToken);
             }
             catch (OperationCanceledException cException)
             {
@@ -63,7 +97,7 @@
             var mqttSubscribeOptions = factory.CreateSubscribeOptionsBuilder()
                 .WithTopicFilter(
                 taskInput.Topic,
-                MqttQualityOfServiceLevel.AtLeastOnce,
+                qualityOfServiceLevel: qos,
                 retainAsPublished: true,
                 retainHandling: MqttRetainHandling.SendAtSubscribe)
                 .Build();
@@ -92,7 +126,7 @@
 
             return result;
 
-            // because we used using when creating the client,
+            // because we used "using" when creating the client,
             // it will be disposed here and will no longer process messages or send acknowledgements/ping!
         }
     }

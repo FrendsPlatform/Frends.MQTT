@@ -14,9 +14,9 @@ public static class MQTT
     /// This is the Task to connnect to an MQTT broker and start a listening session.
     /// [Documentation](https://tasks.frends.com/tasks/frends-tasks/Frends.MQTT.Receive).
     /// </summary>
-    /// <param name="input">MQTT broker connection options: broker address, port, duration of task, topic subscribed to, and (optional) previous session id </param>
+    /// <param name="input">MQTT broker connection options: broker address, port, duration of task, topic subscribed to, (optional) previous session id, TLS (y/n), QoS </param>
     /// <param name="cancellationToken">Cancellation token given by Frends.</param>
-    /// <returns>The result of the connection, including the newly created client, errors, server response, and message list</returns>
+    /// <returns>Whether connection was successful, client (session id), possible errors, and message list</returns>
     public static async Task<Result> Receive([PropertyTab] Input input, CancellationToken cancellationToken)
     {
         try
