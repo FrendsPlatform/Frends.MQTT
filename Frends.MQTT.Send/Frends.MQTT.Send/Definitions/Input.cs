@@ -36,5 +36,34 @@
         /// <example>your_message</example>
         [Required(ErrorMessage = "Message is required")]
         public string Message { get; set; }
+
+        /// <summary>
+        /// Whether to use TLS authentication
+        /// </summary>
+        public bool UseTLS12 { get; set; }
+
+        /// <summary>
+        /// The service level for this session: 0 = At Most Once, 1 = At Least Once, 2 = Exactly Once
+        /// </summary>
+        [Range(0, 2, ErrorMessage = "QoS must be between 0 and 2")]
+        public int QoS { get; set; } = 0;
+
+        /// <summary>
+        /// Username for authentication (NOT session name)
+        /// </summary>
+        public string Username { get; set; }
+
+        /// <summary>
+        /// Password for the user for authenticated connection
+        /// </summary>
+        /// <example>Password123</example>
+        [PasswordPropertyText]
+        public string Password { get; set; }
+
+        /// <summary>
+        /// Do not throw an exception on certificate error, and allow connection.
+        /// </summary>
+        /// <example>true</example>
+        public bool AllowInvalidCertificate { get; set; } = false;
     }
 }

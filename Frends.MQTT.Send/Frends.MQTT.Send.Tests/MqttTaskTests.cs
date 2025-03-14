@@ -75,10 +75,15 @@ namespace Frends.MQTT.Send.Tests
         {
             var input = new Input
             {
-                BrokerAddress = "localhost", // dockerized Mosquitto broker
-                BrokerPort = 1883, // Invalid port number
-                Topic = "test/topic",
-                Message = "Test message FRENDS",
+                BrokerAddress = "localhost",
+                BrokerPort = 8883,
+                Topic = "example topic",
+                Message = "Test message FRENDS " + DateTime.Now.ToString(),
+                AllowInvalidCertificate = true,
+                UseTLS12 = true,
+                Username = "username",
+                Password = "derp",
+                QoS = 1,
             };
 
             var result = await MQTT.SendMessageAsync(input, CancellationToken.None);
