@@ -12,7 +12,7 @@ jobs:
   build:
     uses: FrendsPlatform/FrendsTasks/.github/workflows/linux_build_test.yml@main
     with:
-      workdir: Frends.MQTT.Send
+      workdir: Frends.MQTT.Receive
       prebuild_command: |
         # Create mosquitto config and generate test certs
         mkdir -p mosquitto/config
