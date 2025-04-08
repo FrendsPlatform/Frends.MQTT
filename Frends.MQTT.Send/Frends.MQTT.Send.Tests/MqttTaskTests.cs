@@ -1,26 +1,17 @@
 namespace Frends.MQTT.Send.Tests
 {
     using System;
-    using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
-    using System.Xml.Linq;
     using Frends.MQTT.Send;
     using Frends.MQTT.Send.Definitions;
+    using Frends.MQTT.Send.Tests.Helper;
     using NUnit.Framework;
 
     /// <summary>
-    /// These unit tests require a localhost MQTT server to run.
-    /// To install mosquitto in docker, run:
-    /// docker pull eclipse-mosquitto
-    /// docker network create mosquitto_network
-    /// docker run -d \
-    /// --name mosquitto \
-    /// --network mosquitto_network \
-    /// -p 1883:1883 \
-    /// -p 9001:9001 \
-    /// eclipse-mosquitto
-    /// Alternatively, install mosquitto locally from https://mosquitto.org/download/.
+    /// These unit tests require a localhost MQTT server with TLS and authentication to be running.
+    /// Refer to the "Run the Tests" section in the project's README for setup instructions,
+    /// including how to generate certificates and start the Mosquitto broker using Docker.
     /// </summary>
     [TestFixture]
     public class MqttTaskTests
@@ -40,10 +31,10 @@ namespace Frends.MQTT.Send.Tests
                 Message = "Test message",
             };
 
-            var result = await MQTT.SendMessageAsync(input, CancellationToken.None);
+            var result = await MQTT.Send(input, CancellationToken.None);
 
             Assert.IsFalse(result.Success);
-            Assert.IsTrue(result.Details.Contains("Failed"));
+            Assert.IsTrue(result.Error.Contains("Failed"));
         }
 
         /// <summary>
@@ -61,34 +52,123 @@ namespace Frends.MQTT.Send.Tests
                 Message = "Test message FRENDS",
             };
 
-            var result = await MQTT.SendMessageAsync(input, CancellationToken.None);
+            var result = await MQTT.Send(input, CancellationToken.None);
 
             Assert.IsFalse(result.Success);
         }
 
-        /// <summary>
-        /// Test attempts to connect to a broker and send a message.
-        /// </summary>
-        /// <returns> Success if it returns an confirmation of sent message. </returns>
         [Test]
-        public async Task Send_ShoulReturnSendMessageSuccess()
+        public async Task ShouldSuccessfullyConnectToBroker()
         {
-            var input = new Input
+            var inputRecieve = new InputReceive
+            {
+                BrokerAddress = "localhost",
+                BrokerPort = 1883,
+                ClientId = Guid.NewGuid().ToString(),
+                Topic = "example topic",
+                HowLongTheTaskListensForMessages = 10,
+                Username = "testuser",
+                Password = "testpass",
+                UseTLS12 = false,
+                QoS = 2,
+                AllowInvalidCertificate = true,
+            };
+
+            var connector = new MQTTConnectionCreator();
+            var subscribeResult = await connector.ConnectToBroker(inputRecieve, CancellationToken.None);
+
+            Assert.IsTrue(subscribeResult.Success);
+
+            var inputSendOne = new Input
+            {
+                BrokerAddress = "localhost",
+                BrokerPort = 1883,
+                Topic = "example topic",
+                Message = "Test message FRENDS 1" + DateTime.Now.ToString(),
+                AllowInvalidCertificate = true,
+                UseTLS12 = false,
+                Username = "testuser",
+                Password = "testpass",
+                QoS = 2,
+            };
+
+            var inputSendTwo = new Input
+            {
+                BrokerAddress = "localhost",
+                BrokerPort = 1883,
+                Topic = "example topic",
+                Message = "Test message FRENDS 2" + DateTime.Now.ToString(),
+                AllowInvalidCertificate = true,
+                UseTLS12 = false,
+                Username = "testuser",
+                Password = "testpass",
+                QoS = 2,
+            };
+
+            var sendResultOne = await MQTT.Send(inputSendOne, CancellationToken.None);
+            var sendResultTwo = await MQTT.Send(inputSendTwo, CancellationToken.None);
+            Assert.IsTrue(sendResultOne.Success);
+            Assert.IsTrue(sendResultTwo.Success);
+
+            var finalMessages = await connector.ConnectToBroker(inputRecieve, CancellationToken.None);
+            Assert.AreEqual(2, finalMessages.MessagesList.Count);
+        }
+
+        [Test]
+        public async Task ShouldSuccessfullyConnectToBrokerWithTls()
+        {
+            var inputRecieve = new InputReceive
+            {
+                BrokerAddress = "localhost",
+                BrokerPort = 8883,
+                ClientId = Guid.NewGuid().ToString(),
+                Topic = "example topic",
+                HowLongTheTaskListensForMessages = 10,
+                Username = "testuser",
+                Password = "testpass",
+                UseTLS12 = true,
+                QoS = 1,
+                AllowInvalidCertificate = true,
+            };
+
+            var connector = new MQTTConnectionCreator();
+            var subscribeResult = await connector.ConnectToBroker(inputRecieve, CancellationToken.None);
+
+            Assert.IsTrue(subscribeResult.Success);
+
+            var inputSendOne = new Input
             {
                 BrokerAddress = "localhost",
                 BrokerPort = 8883,
                 Topic = "example topic",
-                Message = "Test message FRENDS " + DateTime.Now.ToString(),
+                Message = "Test message FRENDS 1" + DateTime.Now.ToString(),
                 AllowInvalidCertificate = true,
                 UseTLS12 = true,
-                Username = "username",
-                Password = "derp",
+                Username = "testuser",
+                Password = "testpass",
                 QoS = 1,
             };
 
-            var result = await MQTT.SendMessageAsync(input, CancellationToken.None);
+            var inputSendTwo = new Input
+            {
+                BrokerAddress = "localhost",
+                BrokerPort = 8883,
+                Topic = "example topic",
+                Message = "Test message FRENDS 2" + DateTime.Now.ToString(),
+                AllowInvalidCertificate = true,
+                UseTLS12 = true,
+                Username = "testuser",
+                Password = "testpass",
+                QoS = 1,
+            };
 
-            Assert.IsTrue(result.Success);
+            var sendResultOne = await MQTT.Send(inputSendOne, CancellationToken.None);
+            var sendResultTwo = await MQTT.Send(inputSendTwo, CancellationToken.None);
+            Assert.IsTrue(sendResultOne.Success);
+            Assert.IsTrue(sendResultTwo.Success);
+
+            var finalMessages = await connector.ConnectToBroker(inputRecieve, CancellationToken.None);
+            Assert.AreEqual(2, finalMessages.MessagesList.Count);
         }
     }
 }

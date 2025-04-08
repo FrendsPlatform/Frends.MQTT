@@ -37,4 +37,8 @@
     <ProjectReference Include="..\Frends.MQTT.Send\Frends.MQTT.Send.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="mosquitto\" />
+  </ItemGroup>
+
 </Project>
