@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using MQTTnet;
 
 /// <summary>
-/// The result of the connection, including the newly created client, errors, server response, and message list
+/// The result of the connection, including the newly created client, errors, server response, and message list.
 /// </summary>
 public class Result
 {
@@ -20,7 +20,7 @@ public class Result
     }
 
     /// <summary>
-    /// Whether connection to an MQTT broker was successful or not
+    /// Whether connection to an MQTT broker was successful or not.
     /// </summary>
     public bool Success { get; private set; }
 
@@ -36,7 +36,7 @@ public class Result
 
     /// <summary>
     /// The MQTT client ID. Used to restore a previously opened session to receive buffered messages.
-    /// When making a new connection, pass it to receive buffered messages
+    /// When making a new connection, pass it to receive buffered messages.
     /// </summary>
     public string CurrentClientId { get; private set; }
 }

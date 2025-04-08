@@ -1,4 +1,5 @@
 ﻿namespace Frends.MQTT.Receive;
+
 using System;
 using System.ComponentModel;
 using System.Threading;

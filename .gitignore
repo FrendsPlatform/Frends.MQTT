@@ -1,6 +1,15 @@
-/Frends.MQTT.Connect/.git.tar
-/Frends.MQTT.Receive/Frends.MQTT.Receive.Tests/obj
-/Frends.MQTT.Receive/Frends.MQTT.Receive.Tests/bin
-/Frends.MQTT.Receive/Frends.MQTT.Receive/obj
-/Frends.MQTT.Receive/Frends.MQTT.Receive/bin
-/Frends.MQTT.Receive/.vs
+.vs/
+# Binaries
+**/bin/
+**/obj/
+# Ignore all certificate and key files
+ca.key
+ca.crt
+ca.srl
+server.key
+server.crt
+server.csr
+client.key
+client.crt
+client.csr
+passwd

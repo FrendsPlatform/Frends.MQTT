@@ -10,17 +10,32 @@ on:
 
 jobs:
   build:
-    services:
-      mosquitto:
-        image: eclipse-mosquitto:latest
-        ports:
-          - 1883:1883
-        options: --health-cmd="mosquitto -v" --health-timeout=5m --health-retries=3
     uses: FrendsPlatform/FrendsTasks/.github/workflows/linux_build_test.yml@main
     with:
-      workdir: Frends.MQTT.Receive
-      env_var_name_1: MQTT_publicBrokerAddress
+      workdir: Frends.MQTT.Send
+      prebuild_command: |
+        # Create mosquitto config and generate test certs
+        mkdir -p mosquitto/config
+
+        openssl genrsa -out mosquitto/config/ca.key 2048
+        openssl req -new -x509 -days 365 -key mosquitto/config/ca.key -out mosquitto/config/ca.crt -subj "/CN=MQTT-Test-CA"
+
+        openssl genrsa -out mosquitto/config/server.key 2048
+        openssl req -new -key mosquitto/config/server.key -out mosquitto/config/server.csr -subj "/CN=localhost"
+        openssl x509 -req -in mosquitto/config/server.csr -CA mosquitto/config/ca.crt -CAkey mosquitto/config/ca.key -CAcreateserial -out mosquitto/config/server.crt -days 365
+
+        # Create test user password file
+        touch mosquitto/config/passwd
+        docker run --rm -v "$(pwd)/mosquitto/config:/mosquitto/config" eclipse-mosquitto mosquitto_passwd -b /mosquitto/config/passwd testuser testpass
+
+        # List for debugging (optional)
+        ls -la mosquitto/config
+
+        # Start Mosquitto container
+        docker run -d --name mqtt-broker \
+          -p 1883:1883 -p 8883:8883 \
+          -v "$(pwd)/mosquitto/config:/mosquitto/config" \
+          eclipse-mosquitto
     secrets:
       badge_service_api_key: ${{ secrets.BADGE_SERVICE_API_KEY }}
       test_feed_api_key: ${{ secrets.TASKS_TEST_FEED_API_KEY }}
-      env_var_value_1: ${{ secrets.MQTT_publicBrokerAddress }}

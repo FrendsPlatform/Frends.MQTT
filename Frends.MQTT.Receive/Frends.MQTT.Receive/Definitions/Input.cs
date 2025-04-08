@@ -14,7 +14,7 @@ public class Input
     /// </summary>
     /// <example>broker_address</example>
     [Required(ErrorMessage = "Broker address is required")]
-    public string BrokerAddress { get; set; }
+    required public string BrokerAddress { get; set; }
 
     /// <summary>
     /// The port of the MQTT broker.
@@ -22,7 +22,7 @@ public class Input
     /// <example>1883</example>
     [Required(ErrorMessage = "Broker port is required")]
     [Range(1, 65535, ErrorMessage = "Port must be between 1 and 65535")]
-    public int BrokerPort { get; set; }
+    required public int BrokerPort { get; set; }
 
     /// <summary>
     /// Specifies how many seconds the task (client) will live and process messages.
