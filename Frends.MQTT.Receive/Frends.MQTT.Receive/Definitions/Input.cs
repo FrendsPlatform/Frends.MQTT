@@ -54,7 +54,7 @@ public class Input
     public int QoS { get; set; } = 0;
 
     /// <summary>
-    /// Username for authentication (NOT session name)
+    /// Username for authentication (NOT session name).
     /// </summary>
     public string Username { get; set; }
 
