@@ -13,6 +13,7 @@ jobs:
     uses: FrendsPlatform/FrendsTasks/.github/workflows/linux_build_test.yml@main
     with:
       workdir: Frends.MQTT.Receive
+      dotnet_version: 8.0.x
       prebuild_command: |
         # Create mosquitto config and generate test certs
         mkdir -p mosquitto/config
