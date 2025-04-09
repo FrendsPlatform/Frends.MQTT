@@ -36,7 +36,7 @@ internal class MQTTConnectionCreator
 
         if (taskInput.UseTLS12)
         {
-            var tlsOptions = new MqttClientTlsOptionsBuilder().WithCertificateValidationHandler (
+            var tlsOptions = new MqttClientTlsOptionsBuilder().WithCertificateValidationHandler(
                 o =>
                 {
                     // how do we proceed with the certificate the server sent?

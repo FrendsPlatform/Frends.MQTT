@@ -44,10 +44,6 @@ jobs:
         echo "Waiting for MQTT broker to start..."
         sleep 5
         docker run --network host --rm eclipse-mosquitto mosquitto_sub -h localhost -p 1883 -t '$SYS/broker/version' -C 1 -W 5 || true
-        
-        # Debug: Show running containers and logs
-        docker ps -a
-        docker logs mqtt-broker
     secrets:
       badge_service_api_key: ${{ secrets.BADGE_SERVICE_API_KEY }}
       test_feed_api_key: ${{ secrets.TASKS_TEST_FEED_API_KEY }}
