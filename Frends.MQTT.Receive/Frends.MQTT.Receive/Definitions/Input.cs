@@ -48,7 +48,7 @@ public class Input
     public bool UseTLS12 { get; set; }
 
     /// <summary>
-    /// The service level for this session: 0 = At Most Once, 1 = At Least Once, 2 = Exactly Once.
+    /// The service level for this session: 0 = At Most Once, 1 = At Least Once, 2 = Exactly Once
     /// </summary>
     [Range(0, 2, ErrorMessage = "QoS must be between 0 and 2")]
     public int QoS { get; set; } = 0;

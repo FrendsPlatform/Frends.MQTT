@@ -16,7 +16,7 @@ jobs:
       dotnet_version: 8.0.x
       prebuild_command: |
     
-        echo "Starting MQTT services...
+        echo "Starting MQTT services..."
         docker-compose -f ../Frends.MQTT.Receive.Tests/docker-compose.yml up -d
 
         echo "Waiting for MQTT broker to pass healthcheck..."
