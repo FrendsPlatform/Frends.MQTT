@@ -1,4 +1,4 @@
-﻿# Frends.MQTT.Receive
+# Frends.MQTT.Receive
 The task connects to a MQTT broker, subscribes to a topic, and listens for incoming messages for a given amount of seconds. Afterwards (after the task ends), it returns a list of messages. This client works neither like an email client nor a queue client: messages come down at unknown intervals at the server's convenience. This means if messages arrive while the client is not yet alive, not yet succesfully subscribed, or disposed of at the end of the task, the messages will be lost (at least in QoS 0). 
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
@@ -7,7 +7,7 @@ The task connects to a MQTT broker, subscribes to a topic, and listens for incom
 
 ## Installing
 
-You can install the Task via frends UI Task View.
+You can install the Task via frends UI Task View. 
 
 ## Building
 
