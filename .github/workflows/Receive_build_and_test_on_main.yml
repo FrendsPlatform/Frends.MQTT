@@ -39,7 +39,7 @@ jobs:
           -v "$(pwd)/mosquitto/config:/mosquitto/config" \
           eclipse-mosquitto mosquitto -c /mosquitto/config/mosquitto.conf
 
-        echo "Waiting for MQTT broker to start..."
+        echo "Waiting for MQTT broker to start"
         sleep 5
         docker run --network host --rm eclipse-mosquitto mosquitto_sub -h localhost -p 1883 -t '$SYS/broker/version' -C 1 -W 5 || true
         
