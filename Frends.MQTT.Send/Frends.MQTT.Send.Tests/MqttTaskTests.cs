@@ -9,9 +9,12 @@ namespace Frends.MQTT.Send.Tests
     using NUnit.Framework;
 
     /// <summary>
-    /// These unit tests require a localhost MQTT server with TLS and authentication to be running.
-    /// Refer to the "Run the Tests" section in the project's README for setup instructions,
-    /// including how to generate certificates and start the Mosquitto broker using Docker.
+    /// Start broker with auto-generated TLS/auth:
+    /// docker-compose up -d
+    /// Run tests:
+    /// dotnet test
+    /// Clean up
+    /// docker-compose down --volumes
     /// </summary>
     [TestFixture]
     public class MqttTaskTests

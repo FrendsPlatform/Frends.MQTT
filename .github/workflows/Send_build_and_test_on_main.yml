@@ -15,34 +15,12 @@ jobs:
       workdir: Frends.MQTT.Send
       dotnet_version: 8.0.x
       prebuild_command: |
+    
+        echo "Starting MQTT services..."
+        docker-compose -f Frends.MQTT.Send.Tests/docker-compose.yml up -d
 
-        mkdir -p mosquitto/config
-
-        cp -r Frends.MQTT.Send.Tests/mosquitto/config/* mosquitto/config/
-
-        openssl genrsa -out mosquitto/config/ca.key 2048
-        openssl req -new -x509 -days 365 -key mosquitto/config/ca.key -out mosquitto/config/ca.crt -subj "/CN=MQTT-Test-CA"
-
-        openssl genrsa -out mosquitto/config/server.key 2048
-        openssl req -new -key mosquitto/config/server.key -out mosquitto/config/server.csr -subj "/CN=localhost"
-        openssl x509 -req -in mosquitto/config/server.csr -CA mosquitto/config/ca.crt -CAkey mosquitto/config/ca.key -CAcreateserial -out mosquitto/config/server.crt -days 365
-
-        # Set proper permissions
-        chmod 644 mosquitto/config/*.crt
-        chmod 600 mosquitto/config/server.key
-        chmod 600 mosquitto/config/ca.key
-
-        touch mosquitto/config/passwd
-        chmod 600 mosquitto/config/passwd
-        docker run --rm -v "$(pwd)/mosquitto/config:/mosquitto/config" eclipse-mosquitto mosquitto_passwd -b /mosquitto/config/passwd testuser testpass
-
-        docker run -d --name mqtt-broker \
-          -p 1883:1883 -p 8883:8883 \
-          -v "$(pwd)/mosquitto/config:/mosquitto/config" \
-          eclipse-mosquitto mosquitto -c /mosquitto/config/mosquitto.conf
-
-        echo "Waiting for MQTT broker to start..."
+        echo "Waiting for MQTT broker to pass healthcheck..."
         sleep 5
-        docker run --network host --rm eclipse-mosquitto mosquitto_sub -h localhost -p 1883 -t '$SYS/broker/version' -C 1 -W 5 || true
+        docker exec mqtt-broker mosquitto_sub -h localhost -p 1883 -t '$SYS/broker/version' -C 1 -W 5 || true
     secrets:
       badge_service_api_key: ${{ secrets.BADGE_SERVICE_API_KEY }}
