@@ -24,83 +24,15 @@ You can install the Task via frends UI Task View.
 ## Prerequisites
 
 - **Docker** installed  
-- **.NET SDK** installed (for running tests)
+- **.NET 8 SDK** installed (for running tests)
 
----
+## One-Time Setup
 
-## One-Time Setup: Generate Certificates
-
-These commands create a Certificate Authority and sign a server certificate.
-
-Run these in **Git Bash**, **WSL**, or **Linux/macOS terminal**.
-
+- **Start the MQTT broker with certificates**:
+- 
 ```bash
-openssl genrsa -out mosquitto/config/ca.key 2048
-openssl req -new -x509 -days 365 -key mosquitto/config/ca.key -out mosquitto/config/ca.crt -subj "//CN=MQTT-Test-CA"
-
-openssl genrsa -out mosquitto/config/server.key 2048
-openssl req -new -key mosquitto/config/server.key -out mosquitto/config/server.csr -subj "//CN=localhost"
-openssl x509 -req -in mosquitto/config/server.csr -CA mosquitto/config/ca.crt -CAkey mosquitto/config/ca.key -CAcreateserial -out mosquitto/config/server.crt -days 365
+docker-compose up -d
 ```
-
----
-
-## Create Password File for Mosquitto
-
-This sets up a test user for MQTT auth. Run these in **Power Shell**, in Test project directory.
-
-```bash
-New-Item -ItemType File -Path ".\mosquitto\config\passwd" -Force | Out-Null
-docker run --rm -v "$(Resolve-Path .\mosquitto\config):/mosquitto/config" eclipse-mosquitto mosquitto_passwd -b /mosquitto/config/passwd testuser testpass
-```
-
-**Username:** `testuser`  
-**Password:** `testpass`
-
----
-
-## Set File Permissions (Linux/macOS)
-
-```bash
-chmod 644 mosquitto/config/*.crt
-chmod 600 mosquitto/config/server.key
-```
-
----
-
-## File Structure
-
-```
-mosquitto/
-└── config/
-    ├── mosquitto.conf     # Broker config (included in repo)
-    ├── ca.crt             # CA certificate
-    ├── server.crt         # Server certificate
-    ├── server.key         # Server private key
-    ├── passwd             # MQTT user credentials
-```
-
-Only `mosquitto.conf` is committed to Git. All other files in `mosquitto/config` are generated locally and ignored via `.gitignore` to avoid committing sensitive data.
-
----
-
-## Start the Mosquitto Broker
-
-### On Windows (Command Prompt or PowerShell)
-
-```powershell
-docker run -p 1883:1883 -p 8883:8883 -v "C:\Full\Path\To\mosquitto\config:/mosquitto/config" eclipse-mosquitto
-```
-
-Replace `C:\Full\Path\To\...` with the actual absolute path on your system.
-
-### On Linux/macOS or Git Bash (Windows)
-
-```bash
-docker run -d -p 1883:1883 -p 8883:8883 -v "$(pwd)/mosquitto/config:/mosquitto/config" eclipse-mosquitto
-```
-
----
 
 ## Run the Tests
 
@@ -108,6 +40,12 @@ Once the broker is running, run your .NET tests:
 
 ```bash
 dotnet test
+```
+
+Clean Up:
+
+```bash
+docker-compose down --volumes
 ```
 
 ### Create a NuGet package

@@ -11,3 +11,4 @@
 [assembly: SuppressMessage("StyleCop.CSharp.NamingRules", "SA1306:Field names should begin with lower-case letter", Justification = "Following Frends documentation guidelines", Scope = "namespaceanddescendants", Target = "~N:Frends.MQTT.Receive.Tests")]
 [assembly: SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1401:Fields should be private", Justification = "Following Frends documentation guidelines", Scope = "namespaceanddescendants", Target = "~N:Frends.MQTT.Receive.Tests")]
 [assembly: SuppressMessage("Usage", "CA2211:Non-constant fields should not be visible", Justification = "Following Frends documentation guidelines", Scope = "namespaceanddescendants", Target = "~N:Frends.MQTT.Receive.Tests")]
+[assembly: SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1629:Documentation text should end with a period", Justification = "Following Frends guidelines", Scope = "namespaceanddescendants", Target = "~N:Frends.MQTT.Receive.Tests")]
