@@ -43,7 +43,7 @@ public class Input
     public string Topic { get; set; }
 
     /// <summary>
-    /// Whether to use TLS authentication
+    /// Whether to use TLS authentication.
     /// </summary>
     public bool UseTLS12 { get; set; }
 
