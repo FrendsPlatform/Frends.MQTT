@@ -59,7 +59,7 @@ public class Input
     public string Username { get; set; }
 
     /// <summary>
-    /// Password for the user for authenticated connection
+    /// Password for the user for authenticated connection.
     /// </summary>
     /// <example>Password123</example>
     [PasswordPropertyText]
