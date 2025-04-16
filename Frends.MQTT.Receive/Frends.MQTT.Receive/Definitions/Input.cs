@@ -12,61 +12,62 @@ public class Input
     /// <summary>
     /// The address of the MQTT broker.
     /// </summary>
-    /// <example>broker_address</example>
-    [Required(ErrorMessage = "Broker address is required")]
-    required public string BrokerAddress { get; set; }
+    /// <example>broker_host</example>
+    required public string Host { get; set; }
 
     /// <summary>
     /// The port of the MQTT broker.
     /// </summary>
     /// <example>1883</example>
-    [Required(ErrorMessage = "Broker port is required")]
-    [Range(1, 65535, ErrorMessage = "Port must be between 1 and 65535")]
     required public int BrokerPort { get; set; }
 
     /// <summary>
     /// Specifies how many seconds the task (client) will live and process messages.
     /// </summary>
-    [Required(ErrorMessage = "Keep alive value is required")]
-    [Range(1, 65535, ErrorMessage = "Lifetime must be between 1 and 65535")]
-    public int HowLongTheTaskListensForMessages { get; set; }
+    /// <example>10</example>
+    public int ReceivingTime { get; set; }
 
     /// <summary>
     /// The client (session) identificator. This will allow to collect messages from an existing session
     /// </summary>
+    /// <example>3fa85f64-5717-4562-b3fc-2c963f66afa6</example>
     public string ClientId { get; set; }
 
     /// <summary>
     /// The topic the client subscribes to when connecting.
     /// </summary>
-    [Required(ErrorMessage = "Required: In this version of the task, this is the only opportunity to subscribe")]
+    /// <example>example topic</example>
     public string Topic { get; set; }
 
     /// <summary>
     /// Whether to use TLS authentication.
     /// </summary>
-    public bool UseTLS12 { get; set; }
+    /// <example>false</example>
+    public bool UseTls12 { get; set; }
 
     /// <summary>
-    /// The service level for this session: 0 = At Most Once, 1 = At Least Once, 2 = Exactly Once.
+    /// The Quality of Service (QoS) level for the MQTT session.
     /// </summary>
-    [Range(0, 2, ErrorMessage = "QoS must be between 0 and 2")]
-    public int QoS { get; set; } = 0;
+    /// <example>QoS.AtMostOnce</example>
+    public QoS QoS { get; set; }
 
     /// <summary>
-    /// Username for authentication (NOT session name).
+    /// Username for authentication.
     /// </summary>
+    /// <example>testuser</example>
     public string Username { get; set; }
 
     /// <summary>
-    /// Password for the user for authenticated connection.
+    /// Password for authentication.
     /// </summary>
     /// <example>Password123</example>
     [PasswordPropertyText]
     public string Password { get; set; }
 
     /// <summary>
-    /// Do not throw an exception on certificate error, and allow connection.
+    /// When true, allows connections even if the server's TLS certificate is invalid (e.g., self-signed,
+    /// expired, or hostname mismatch). WARNING: This reduces security and should only be used in
+    /// development/testing environments or when connecting to internal servers with self-signed certificates.
     /// </summary>
     /// <example>true</example>
     public bool AllowInvalidCertificate { get; set; } = false;

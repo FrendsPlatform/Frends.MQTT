@@ -17,7 +17,7 @@ public static class MQTT
     /// </summary>
     /// <param name="input">MQTT broker connection options: broker address, port, duration of task, topic subscribed to, (optional) previous session id, TLS (y/n), QoS </param>
     /// <param name="cancellationToken">Cancellation token given by Frends.</param>
-    /// <returns>Whether connection was successful, client (session id), possible errors, and message list</returns>
+    /// <returns>Object { bool Success, string CurrentClientId, string Error, List(string) MessagesList }</returns>
     public static async Task<Result> Receive([PropertyTab] Input input, CancellationToken cancellationToken)
     {
         try

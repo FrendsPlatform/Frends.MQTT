@@ -26,11 +26,11 @@ internal class UnitTests
     /// </summary>
     /// <returns> Test succeeds when the connection is refused. </returns>
     [Test]
-    public async Task Send_ShouldReturnErrorResult_WhenBrokerAddressIsInvalid()
+    public async Task Send_ShouldReturnErrorResult_WhenHostAddressIsInvalid()
     {
         var input = new Input
         {
-            BrokerAddress = "invalid_address",
+            Host = "invalid_address",
             BrokerPort = 1883,
             Topic = "test/topic",
         };
@@ -38,6 +38,7 @@ internal class UnitTests
         var result = await MQTT.Receive(input, CancellationToken.None);
 
         Assert.IsFalse(result.Success);
+        Assert.That(result.Error, Does.Contain("Error while connecting host"));
     }
 
     /// <summary>
@@ -49,7 +50,7 @@ internal class UnitTests
     {
         var input = new Input
         {
-            BrokerAddress = "localhost", // dockerized Mosquitto broker
+            Host = "localhost", // dockerized Mosquitto broker
             BrokerPort = 99999, // Invalid port number
             Topic = "test/topic",
         };
@@ -57,6 +58,7 @@ internal class UnitTests
         var result = await MQTT.Receive(input, CancellationToken.None);
 
         Assert.IsFalse(result.Success);
+        Assert.That(result.Error, Does.Contain($"port ('{input.BrokerPort}') must be less than or equal"));
     }
 
     [Test]
@@ -64,15 +66,15 @@ internal class UnitTests
     {
         var input = new Input
         {
-            BrokerAddress = "localhost",
+            Host = "localhost",
             BrokerPort = 1883,
             ClientId = Guid.NewGuid().ToString(),
             Topic = "example topic",
-            HowLongTheTaskListensForMessages = 10,
+            ReceivingTime = 10,
             Username = "testuser",
             Password = "testpass",
-            UseTLS12 = false,
-            QoS = 2,
+            UseTls12 = false,
+            QoS = QoS.ExactlyOnce,
             AllowInvalidCertificate = true,
         };
 
@@ -82,7 +84,7 @@ internal class UnitTests
         using var publisher = new MqttClientFactory().CreateMqttClient();
         await publisher.ConnectAsync(
             new MqttClientOptionsBuilder()
-                .WithTcpServer(input.BrokerAddress, input.BrokerPort)
+                .WithTcpServer(input.Host, input.BrokerPort)
                 .WithCredentials(input.Username, input.Password)
                 .Build());
 
@@ -106,15 +108,15 @@ internal class UnitTests
     {
         var input = new Input
         {
-            BrokerAddress = "localhost",
+            Host = "localhost",
             BrokerPort = 8883,
             ClientId = Guid.NewGuid().ToString(),
             Topic = "example topic",
-            HowLongTheTaskListensForMessages = 10,
+            ReceivingTime = 10,
             Username = "testuser",
             Password = "testpass",
-            UseTLS12 = true,
-            QoS = 2,
+            UseTls12 = true,
+            QoS = QoS.ExactlyOnce,
             AllowInvalidCertificate = true,
         };
 
@@ -133,7 +135,7 @@ internal class UnitTests
 
         await publisher.ConnectAsync(
             new MqttClientOptionsBuilder()
-                .WithTcpServer(input.BrokerAddress, input.BrokerPort)
+                .WithTcpServer(input.Host, input.BrokerPort)
                 .WithCredentials(input.Username, input.Password)
                 .WithTlsOptions(tlsOptions)
                 .Build());
