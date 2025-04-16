@@ -24,11 +24,11 @@ namespace Frends.MQTT.Send.Tests
         /// </summary>
         /// <returns> Test succeeds when the connection is refused. </returns>
         [Test]
-        public async Task Send_ShouldReturnErrorResult_WhenBrokerAddressIsInvalid()
+        public async Task Send_ShouldReturnErrorResult_WhenHostIsInvalid()
         {
             var input = new Input
             {
-                BrokerAddress = "invalid_address",
+                Host = "invalid_address",
                 BrokerPort = 1883,
                 Topic = "test/topic",
                 Message = "Test message",
@@ -37,7 +37,7 @@ namespace Frends.MQTT.Send.Tests
             var result = await MQTT.Send(input, CancellationToken.None);
 
             Assert.IsFalse(result.Success);
-            Assert.IsTrue(result.Error.Contains("Failed"));
+            Assert.That(result.Error, Does.Contain("Failed to send MQTT message"));
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace Frends.MQTT.Send.Tests
         {
             var input = new Input
             {
-                BrokerAddress = "localhost", // dockerized Mosquitto broker
+                Host = "localhost", // dockerized Mosquitto broker
                 BrokerPort = 99999, // Invalid port number
                 Topic = "test/topic",
                 Message = "Test message FRENDS",
@@ -58,6 +58,7 @@ namespace Frends.MQTT.Send.Tests
             var result = await MQTT.Send(input, CancellationToken.None);
 
             Assert.IsFalse(result.Success);
+            Assert.That(result.Error, Does.Contain($"port ('{input.BrokerPort}') must be less than or equal"));
         }
 
         [Test]
@@ -65,15 +66,15 @@ namespace Frends.MQTT.Send.Tests
         {
             var inputRecieve = new InputReceive
             {
-                BrokerAddress = "localhost",
+                Host = "localhost",
                 BrokerPort = 1883,
                 ClientId = Guid.NewGuid().ToString(),
                 Topic = "example topic",
-                HowLongTheTaskListensForMessages = 10,
+                ReceivingTime = 10,
                 Username = "testuser",
                 Password = "testpass",
-                UseTLS12 = false,
-                QoS = 2,
+                UseTls12 = false,
+                QoS = QoS.ExactlyOnce,
                 AllowInvalidCertificate = true,
             };
 
@@ -84,28 +85,28 @@ namespace Frends.MQTT.Send.Tests
 
             var inputSendOne = new Input
             {
-                BrokerAddress = "localhost",
+                Host = "localhost",
                 BrokerPort = 1883,
                 Topic = "example topic",
                 Message = "Test message FRENDS 1" + DateTime.Now.ToString(),
                 AllowInvalidCertificate = true,
-                UseTLS12 = false,
+                UseTls12 = false,
                 Username = "testuser",
                 Password = "testpass",
-                QoS = 2,
+                QoS = QoS.ExactlyOnce,
             };
 
             var inputSendTwo = new Input
             {
-                BrokerAddress = "localhost",
+                Host = "localhost",
                 BrokerPort = 1883,
                 Topic = "example topic",
                 Message = "Test message FRENDS 2" + DateTime.Now.ToString(),
                 AllowInvalidCertificate = true,
-                UseTLS12 = false,
+                UseTls12 = false,
                 Username = "testuser",
                 Password = "testpass",
-                QoS = 2,
+                QoS = QoS.ExactlyOnce,
             };
 
             var sendResultOne = await MQTT.Send(inputSendOne, CancellationToken.None);
@@ -122,15 +123,15 @@ namespace Frends.MQTT.Send.Tests
         {
             var inputRecieve = new InputReceive
             {
-                BrokerAddress = "localhost",
+                Host = "localhost",
                 BrokerPort = 8883,
                 ClientId = Guid.NewGuid().ToString(),
                 Topic = "example topic",
-                HowLongTheTaskListensForMessages = 10,
+                ReceivingTime = 10,
                 Username = "testuser",
                 Password = "testpass",
-                UseTLS12 = true,
-                QoS = 1,
+                UseTls12 = true,
+                QoS = QoS.AtLeastOnce,
                 AllowInvalidCertificate = true,
             };
 
@@ -141,28 +142,28 @@ namespace Frends.MQTT.Send.Tests
 
             var inputSendOne = new Input
             {
-                BrokerAddress = "localhost",
+                Host = "localhost",
                 BrokerPort = 8883,
                 Topic = "example topic",
                 Message = "Test message FRENDS 1" + DateTime.Now.ToString(),
                 AllowInvalidCertificate = true,
-                UseTLS12 = true,
+                UseTls12 = true,
                 Username = "testuser",
                 Password = "testpass",
-                QoS = 1,
+                QoS = QoS.AtLeastOnce,
             };
 
             var inputSendTwo = new Input
             {
-                BrokerAddress = "localhost",
+                Host = "localhost",
                 BrokerPort = 8883,
                 Topic = "example topic",
                 Message = "Test message FRENDS 2" + DateTime.Now.ToString(),
                 AllowInvalidCertificate = true,
-                UseTLS12 = true,
+                UseTls12 = true,
                 Username = "testuser",
                 Password = "testpass",
-                QoS = 1,
+                QoS = QoS.AtLeastOnce,
             };
 
             var sendResultOne = await MQTT.Send(inputSendOne, CancellationToken.None);

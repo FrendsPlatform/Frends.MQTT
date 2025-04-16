@@ -17,7 +17,7 @@ public static class MQTT
     /// </summary>
     /// <param name="input">MQTT publish connection options: broker address, port, topic to publish to, message content, TLS (y/n), QoS level, optional username and password, and option to allow invalid certificates.</param>
     /// <param name="cancellationToken">Cancellation token given by Frends.</param>
-    /// <returns>Whether connection was successful confirmation message and possible errors.</returns>
+    /// <returns>Object { bool Success, string Data, string Error }</returns>
     public static async Task<Result> Send([PropertyTab] Input input, CancellationToken cancellationToken)
     {
         try
@@ -25,7 +25,7 @@ public static class MQTT
             var mqttSender = new MqttSender();
             await mqttSender.Send(input, cancellationToken);
 
-            return new Result(true, "Message sent.", null);
+            return new Result(true, "Message sent.", string.Empty);
         }
         catch (Exception ex)
         {

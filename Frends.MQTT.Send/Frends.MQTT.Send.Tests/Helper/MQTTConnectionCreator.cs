@@ -1,5 +1,6 @@
 ﻿namespace Frends.MQTT.Send.Tests.Helper;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Security.Authentication;
 using System.Text;
@@ -25,14 +26,14 @@ internal class MQTTConnectionCreator
         MQTTnet.Protocol.MqttQualityOfServiceLevel qos = (MqttQualityOfServiceLevel)taskInput.QoS;
 
         var options = new MqttClientOptionsBuilder()
-            .WithTcpServer(taskInput.BrokerAddress, taskInput.BrokerPort)
+            .WithTcpServer(taskInput.Host, taskInput.BrokerPort)
             .WithCleanSession(false)
             .WithWillQualityOfServiceLevel(qos)
             .WithSessionExpiryInterval(sessionExpiryInterval: uint.MaxValue)
-            .WithKeepAlivePeriod(TimeSpan.FromSeconds(taskInput.HowLongTheTaskListensForMessages))
+            .WithKeepAlivePeriod(TimeSpan.FromSeconds(taskInput.ReceivingTime))
             .WithClientId(clientID);
 
-        if (taskInput.UseTLS12)
+        if (taskInput.UseTls12)
         {
             var tlsOptions = new MqttClientTlsOptionsBuilder().WithCertificateValidationHandler(
                 o =>
@@ -62,16 +63,17 @@ internal class MQTTConnectionCreator
             options.WithCredentials(taskInput.Username, taskInput.Password);
         }
 
-        var messagesList = new List<string>();
+        var messagesList = new ConcurrentQueue<string>();
 
         // in the future, any incoming messages will go on the list
-        mqttClient.ApplicationMessageReceivedAsync += e =>
+        var handler = (Func<MqttApplicationMessageReceivedEventArgs, Task>)(e =>
         {
-            // add  incoming message to list
             var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
-            messagesList.Add(payload);
+            messagesList.Enqueue(payload);
             return Task.CompletedTask;
-        };
+        });
+
+        mqttClient.ApplicationMessageReceivedAsync += handler;
 
         MqttClientConnectResult connectionResponse = null;
         try
@@ -86,7 +88,7 @@ internal class MQTTConnectionCreator
         }
         catch (Exception ex)
         {
-            return new ResultReceive(success: false, clientID: clientID, error: ex.Message, messagesList: messagesList);
+            return new ResultReceive(success: false, clientID: clientID, error: $"Error while trying to connect to MQTT broker: {ex.Message}", messagesList: messagesList);
         }
 
         // after connecting, immediately SUBSCRIBE
@@ -104,21 +106,23 @@ internal class MQTTConnectionCreator
         }
         catch (OperationCanceledException cException)
         {
-            return new ResultReceive(success: false, clientID: clientID, cException.Message, messagesList: messagesList);
+            return new ResultReceive(success: false, clientID: clientID, $"Error while trying to connect to MQTT broker: {cException.Message}", messagesList: messagesList);
         }
         catch (Exception e)
         {
-            return new ResultReceive(success: false, clientID: clientID, error: e.Message, messagesList: messagesList);
+            return new ResultReceive(success: false, clientID: clientID, $"Error while trying to connect to MQTT broker: {e.Message}", messagesList: messagesList);
         }
 
         // collect messages for some seconds, then dispose at the curly bracket
         // close session dirty (without sending a DISCONNECT packet, to make the broker keep session.
-        await Task.Delay(taskInput.HowLongTheTaskListensForMessages * 1000, cancellationToken);
+        await Task.Delay(taskInput.ReceivingTime * 1000, cancellationToken);
         var result = new ResultReceive(
             success: true,
             clientID: clientID,
             error: string.Empty,
             messagesList: messagesList);
+
+        mqttClient.ApplicationMessageReceivedAsync -= handler;
 
         return result;
 

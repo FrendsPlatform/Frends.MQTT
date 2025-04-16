@@ -1,6 +1,6 @@
 ﻿namespace Frends.MQTT.Send.Tests.Helper;
 
-using System.ComponentModel;
+using Frends.MQTT.Send.Definitions;
 
 /// <summary>
 /// Input class contains parameters of the broker connection.
@@ -10,54 +10,61 @@ public class InputReceive
     /// <summary>
     /// The address of the MQTT broker.
     /// </summary>
-    /// <example>broker_addresos</example>
-    public string BrokerAddress { get; set; }
+    /// <example>broker_host</example>
+    required public string Host { get; set; }
 
     /// <summary>
-    /// Sets the port of the MQTT broker.
+    /// The port of the MQTT broker.
     /// </summary>
     /// <example>1883</example>
-    public int BrokerPort { get; set; }
+    required public int BrokerPort { get; set; }
 
     /// <summary>
     /// Specifies how many seconds the task (client) will live and process messages.
     /// </summary>
-    public int HowLongTheTaskListensForMessages { get; set; }
+    /// <example>10</example>
+    public int ReceivingTime { get; set; }
 
     /// <summary>
     /// The client (session) identificator. This will allow to collect messages from an existing session
     /// </summary>
+    /// <example>3fa85f64-5717-4562-b3fc-2c963f66afa6</example>
     public string ClientId { get; set; }
 
     /// <summary>
     /// The topic the client subscribes to when connecting.
     /// </summary>
+    /// <example>example topic</example>
     public string Topic { get; set; }
 
     /// <summary>
-    /// Whether to use TLS authentication
+    /// Whether to use TLS authentication.
     /// </summary>
-    public bool UseTLS12 { get; set; }
+    /// <example>false</example>
+    public bool UseTls12 { get; set; }
 
     /// <summary>
-    /// The service level for this session: 0 = At Most Once, 1 = At Least Once, 2 = Exactly Once
+    /// The Quality of Service (QoS) level for the MQTT session.
     /// </summary>
-    public int QoS { get; set; } = 0;
+    /// <example>QoS.AtMostOnce</example>
+    public QoS QoS { get; set; }
 
     /// <summary>
-    /// Username for authentication (NOT session name)
+    /// Username for authentication.
     /// </summary>
+    /// <example>testuser</example>
     public string Username { get; set; }
 
     /// <summary>
-    /// Password for the user for authenticated connection
+    /// Password for authentication.
     /// </summary>
     /// <example>Password123</example>
-    [PasswordPropertyText]
     public string Password { get; set; }
 
     /// <summary>
-    /// Do not throw an exception on certificate error, and allow connection.
+    /// When true, allows connections even if the server's TLS certificate is invalid (e.g., self-signed,
+    /// expired, or hostname mismatch). WARNING: This reduces security and should only be used in
+    /// development/testing environments or when connecting to internal servers with self-signed certificates.
     /// </summary>
     /// <example>true</example>
     public bool AllowInvalidCertificate { get; set; } = false;

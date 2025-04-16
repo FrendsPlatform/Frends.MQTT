@@ -24,12 +24,12 @@ public class MqttSender
         using var mqttClient = factory.CreateMqttClient();
 
         var options = new MqttClientOptionsBuilder()
-            .WithTcpServer(input.BrokerAddress, input.BrokerPort)
+            .WithTcpServer(input.Host, input.BrokerPort)
             .WithCleanSession();
 
         MqttQualityOfServiceLevel qos = (MqttQualityOfServiceLevel)input.QoS;
 
-        if (input.UseTLS12)
+        if (input.UseTls12)
         {
             var tlsOptions = new MqttClientTlsOptionsBuilder().WithCertificateValidationHandler(
                 o =>
