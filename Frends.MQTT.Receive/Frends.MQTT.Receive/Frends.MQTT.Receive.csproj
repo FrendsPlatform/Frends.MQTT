@@ -1,0 +1,46 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	  <TargetFramework>net8.0</TargetFramework>
+	  <LangVersion>Latest</LangVersion>
+	  <Version>1.0.0</Version>
+	  <Authors>Frends</Authors>
+	  <Copyright>Frends</Copyright>
+	  <Company>Frends</Company>
+	  <Product>Frends</Product>
+	  <PackageTags>Frends</PackageTags>
+	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
+	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
+	  <Description>Connects to an MQTT broker, and starts a session to listen to messages. The session will persist for some time after the task has finished </Description>
+	  <PackageProjectUrl>https://frends.com/</PackageProjectUrl>
+	  <RepositoryUrl>https://github.com/FrendsPlatform/Frends.MQTT/tree/main/Frends.MQTT.Receive</RepositoryUrl>
+	  <OutputType>Library</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="FrendsTaskMetadata.json" Pack="true" PackagePath="/">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+	<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+		<_Parameter1>$(MSBuildProjectName).Tests</_Parameter1>
+	</AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="MQTTnet" Version="5.0.1.1416" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+		<PrivateAssets>all</PrivateAssets>
+		<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+	</PackageReference>
+  </ItemGroup>
+	
+</Project>
+

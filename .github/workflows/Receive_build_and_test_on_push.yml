@@ -1,0 +1,27 @@
+name: Receive_build_test
+
+on:
+  push:
+    branches-ignore:
+      - main
+    paths:
+      - 'Frends.MQTT.Receive/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: FrendsPlatform/FrendsTasks/.github/workflows/linux_build_test.yml@main
+    with:
+      workdir: Frends.MQTT.Receive
+      dotnet_version: 8.0.x
+      prebuild_command: |
+    
+        echo "Starting MQTT services..."
+        docker-compose -f Frends.MQTT.Receive.Tests/docker-compose.yml up -d
+
+        echo "Waiting for MQTT broker to pass healthcheck..."
+        sleep 5
+        docker exec mqtt-broker mosquitto_sub -h localhost -p 1883 -t '$SYS/broker/version' -C 1 -W 5 || true
+    secrets:
+      badge_service_api_key: ${{ secrets.BADGE_SERVICE_API_KEY }}
+      test_feed_api_key: ${{ secrets.TASKS_TEST_FEED_API_KEY }}
