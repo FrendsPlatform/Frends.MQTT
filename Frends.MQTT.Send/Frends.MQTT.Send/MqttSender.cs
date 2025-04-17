@@ -72,8 +72,9 @@ public class MqttSender
 
             await mqttClient.PublishAsync(mqttMessage, cancellationToken);
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException ex)
         {
+            throw new MqttSenderException("MQTT operation was canceled", ex);
         }
         catch (Exception ex)
         {

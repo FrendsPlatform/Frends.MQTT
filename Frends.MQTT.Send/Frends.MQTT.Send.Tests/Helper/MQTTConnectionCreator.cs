@@ -106,7 +106,7 @@ internal class MQTTConnectionCreator
         }
         catch (OperationCanceledException cException)
         {
-            return new ResultReceive(success: false, clientID: clientID, $"Error while trying to connect to MQTT broker: {cException.Message}", messagesList: messagesList);
+            return new ResultReceive(success: false, clientID: clientID, $"Error while trying to subscribe to MQTT topic: {cException.Message}", messagesList: messagesList);
         }
         catch (Exception e)
         {

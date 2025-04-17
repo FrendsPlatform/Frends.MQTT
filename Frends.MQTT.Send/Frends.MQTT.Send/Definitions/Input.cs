@@ -63,6 +63,7 @@
         /// development/testing environments or when connecting to internal servers with self-signed certificates.
         /// </summary>
         /// <example>true</example>
-        public bool AllowInvalidCertificate { get; set; } = false;
+        [DefaultValue(false)]
+        public bool AllowInvalidCertificate { get; set; }
     }
 }
