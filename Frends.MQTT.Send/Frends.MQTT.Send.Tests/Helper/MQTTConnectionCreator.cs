@@ -110,7 +110,7 @@ internal class MQTTConnectionCreator
         }
         catch (Exception e)
         {
-            return new ResultReceive(success: false, clientID: clientID, $"Error while trying to connect to MQTT broker: {e.Message}", messagesList: messagesList);
+            return new ResultReceive(success: false, clientID: clientID, $"Error while trying to subscribe to MQTT topic: {e.Message}", messagesList: messagesList);
         }
 
         // collect messages for some seconds, then dispose at the curly bracket
