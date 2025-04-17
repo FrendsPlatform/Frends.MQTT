@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  mqtt-setup:
+    image: alpine:latest
+    container_name: mqtt-setup
+    volumes:
+      - ./mosquitto/config:/output
+    entrypoint: |
+      sh -c '
+      apk add --no-cache openssl mosquitto &&
+
+      mkdir -p /output &&
+
+      echo "Generating CA..."
+      openssl genrsa -out /output/ca.key 2048
+      openssl req -new -x509 -days 365 -key /output/ca.key -out /output/ca.crt -subj "/CN=MQTT-Test-CA"
+
+      echo "Generating server certificate..."
+      openssl genrsa -out /output/server.key 2048
+      openssl req -new -key /output/server.key -out /output/server.csr -subj "/CN=localhost"
+      openssl x509 -req -in /output/server.csr -CA /output/ca.crt -CAkey /output/ca.key -CAcreateserial -out /output/server.crt -days 365
+
+      echo "Generating Mosquitto password file..."
+      touch /output/passwd
+      mosquitto_passwd -b /output/passwd testuser testpass
+
+      echo "Fixing permissions..."
+      chmod 644 /output/*.crt
+      chmod 600 /output/server.key /output/ca.key /output/passwd
+      '
+    restart: "no"
+
+  mqtt-broker:
+    image: eclipse-mosquitto
+    container_name: mqtt-broker
+    depends_on:
+      mqtt-setup:
+        condition: service_completed_successfully
+    ports:
+      - "1883:1883"
+      - "8883:8883"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    command: mosquitto -c /mosquitto/config/mosquitto.conf
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -h localhost -t '$SYS/broker/version' -C 1 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
