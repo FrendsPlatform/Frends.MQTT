@@ -48,7 +48,7 @@ services:
         mosquitto_passwd -b /output/passwd testuser testpass
 
         echo "Fixing permissions..."
-        chmod 644 /output/*.crt
+        chmod 644 /output/*.crt /output/*.key
         chmod 600 /output/server.key /output/ca.key /output/passwd
       '
     restart: "no"
