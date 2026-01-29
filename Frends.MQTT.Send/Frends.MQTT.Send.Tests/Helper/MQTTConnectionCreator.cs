@@ -99,10 +99,13 @@ internal class MQTTConnectionCreator
         {
             return new ResultReceive(success: false, clientID: clientID, cException.Message, messagesList: messagesList);
         }
+
+        /*
         catch (Exception ex)
         {
             return new ResultReceive(success: false, clientID: clientID, error: $"Error while trying to connect to MQTT broker: {ex.Message}", messagesList: messagesList);
         }
+        */
 
         // after connecting, immediately SUBSCRIBE
         var mqttSubscribeOptions = factory.CreateSubscribeOptionsBuilder()
