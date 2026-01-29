@@ -33,7 +33,7 @@ jobs:
       prebuild_command: |
     
         echo "Starting MQTT services..."
-        docker-compose -f Frends.MQTT.Send.Tests/docker-compose.yml up -d
+        docker compose -f Frends.MQTT.Send.Tests/docker-compose.yml up -d
 
         echo "Waiting for MQTT broker to pass healthcheck..."
         timeout /t 5
