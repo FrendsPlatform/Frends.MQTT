@@ -188,7 +188,7 @@ public class MqttTaskTests
             ReceivingTime = 10,
             UseTls12 = true,
             QoS = QoS.AtLeastOnce,
-            AllowInvalidCertificate = false,
+            AllowInvalidCertificate = true,
             UseClientCertificate = true,
             CertificateSource = CertificateSource.File,
 
