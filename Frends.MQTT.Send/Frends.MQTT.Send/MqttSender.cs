@@ -5,6 +5,7 @@ using MQTTnet;
 using MQTTnet.Protocol;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
@@ -67,8 +68,8 @@ public class MqttSender
                         break;
                     case CertificateSource.File:
                         if (input.CertificateFilePath == null)
-                            throw new ArgumentException("PFX file path is required for CertificateSource.File authentication.");
-                        certificates = LoadCertificateFromPfxFile(input.CertificateFilePath, input.CertificatePassword ?? string.Empty);
+                            throw new ArgumentException("File path is required for CertificateSource.File authentication.");
+                        certificates = LoadCertificateFromFile(input.CertificateFilePath, input.CertificateKeyFilePath, input.CertificatePassword ?? string.Empty);
                         break;
                     case CertificateSource.String:
                         if (input.CertificateBase64String == null)
@@ -137,17 +138,46 @@ public class MqttSender
         return new[] { new X509Certificate2(cert) };
     }
 
-    private static IEnumerable<X509Certificate2> LoadCertificateFromPfxFile(string path, string password)
+    private static IEnumerable<X509Certificate2> LoadCertificateFromFile(string certificateFilePath, string? certificateKeyFilePath = null, string? password = null)
     {
-        var cert = new X509Certificate2(
-            path,
-            password,
-            X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.Exportable);
+        if (!File.Exists(certificateFilePath))
+            throw new FileNotFoundException("Certificate file not found.", certificateFilePath);
 
-        if (!cert.HasPrivateKey)
-            throw new InvalidCredentialException("Certificate does not contain a private key.");
+        var extension = Path.GetExtension(certificateFilePath).ToLowerInvariant();
 
-        return new[] { cert };
+        if (extension is ".pfx" or ".p12")
+        {
+            // PFX/PKCS#12 file
+            var cert = new X509Certificate2(
+                certificateFilePath,
+                password ?? string.Empty,
+                X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+
+            if (!cert.HasPrivateKey)
+                throw new InvalidCredentialException("The PFX certificate does not contain a private key.");
+
+            return new[] { cert };
+        }
+        else if (extension is ".crt" or ".pem")
+        {
+            // PEM certificate. Must have key file
+            if (string.IsNullOrEmpty(certificateKeyFilePath))
+                throw new ArgumentException("Private key file path is required for PEM certificates.");
+
+            if (!File.Exists(certificateKeyFilePath))
+                throw new FileNotFoundException("Private key file not found.", certificateKeyFilePath);
+
+            var cert = X509Certificate2.CreateFromPemFile(certificateFilePath, certificateKeyFilePath);
+
+            if (!cert.HasPrivateKey)
+                throw new InvalidCredentialException("The PEM certificate or key is invalid or missing the private key.");
+
+            return new[] { cert };
+        }
+        else
+        {
+            throw new NotSupportedException($"Unsupported certificate file extension: {extension}");
+        }
     }
 
     private static IEnumerable<X509Certificate2> LoadCertificateFromBase64(string base64, string password)

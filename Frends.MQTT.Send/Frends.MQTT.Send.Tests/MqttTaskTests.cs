@@ -191,9 +191,6 @@ public class MqttTaskTests
             AllowInvalidCertificate = true,
             UseClientCertificate = true,
             CertificateSource = CertificateSource.File,
-
-            // CertificateFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.pfx"),
-            // CertificatePassword = "clientpass",
             CertificateFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.crt"),
             CertificateKeyFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.key"),
         };
@@ -214,9 +211,6 @@ public class MqttTaskTests
             QoS = QoS.AtLeastOnce,
             UseClientCertificate = true,
             CertificateSource = CertificateSource.File,
-
-            // CertificateFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.pfx"),
-            // CertificatePassword = "clientpass",
             CertificateFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.crt"),
             CertificateKeyFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.key"),
         };
@@ -232,9 +226,6 @@ public class MqttTaskTests
             QoS = QoS.AtLeastOnce,
             UseClientCertificate = true,
             CertificateSource = CertificateSource.File,
-
-            // CertificateFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.pfx"),
-            // CertificatePassword = "clientpass",
             CertificateFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.crt"),
             CertificateKeyFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.key"),
         };
