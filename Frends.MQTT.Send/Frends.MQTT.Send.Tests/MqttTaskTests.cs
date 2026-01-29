@@ -240,6 +240,7 @@ public class MqttTaskTests
     }
 
     [Test]
+    [Platform(Include = "Win")]
     public async Task ShouldSuccessfullyConnectToBrokerWithTlsAndPFXCertificate()
     {
         var inputRecieve = new InputReceive
