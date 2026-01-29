@@ -94,6 +94,13 @@
         public string? CertificateFilePath { get; set; }
 
         /// <summary>
+        /// Path to the certificate key file to be used in authentication. Needed when used PEM typed certificates.
+        /// </summary>
+        /// <example>C:\cert.key</example>
+        [UIHint(nameof(CertificateSource), "", CertificateSource.File)]
+        public string? CertificateKeyFilePath { get; set; }
+
+        /// <summary>
         /// The certificate as Base64 string to be used in authentication.
         /// </summary>
         /// <example>C:\cert.pfx</example>
