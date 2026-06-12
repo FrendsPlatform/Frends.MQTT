@@ -1,11 +1,11 @@
 namespace Frends.MQTT.Send;
 
 using Frends.MQTT.Send.Definitions;
+using Frends.MQTT.Send.Helpers;
 using MQTTnet;
 using MQTTnet.Protocol;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
@@ -61,21 +61,40 @@ public class MqttSender
                         if (input.CertificateThumbprint == null)
                             throw new ArgumentException("CertificateThumbprint cannot be empty when CertificateStore is selected.");
 
-                        certificates = LoadCertificateFromStore(
+                        certificates = new[]
+                        {
+                            CertificateLoader.LoadFromStore(
                             input.CertificateThumbprint,
                             StoreName.My,
-                            input.CertificateStoreLocation is CertificateStoreLocation.LocalMachine ? StoreLocation.LocalMachine : StoreLocation.CurrentUser);
+                            input.CertificateStoreLocation is CertificateStoreLocation.LocalMachine ? StoreLocation.LocalMachine : StoreLocation.CurrentUser),
+                        };
                         break;
+
                     case CertificateSource.File:
                         if (input.CertificateFilePath == null)
                             throw new ArgumentException("File path is required for CertificateSource.File authentication.");
-                        certificates = LoadCertificateFromFile(input.CertificateFilePath, input.CertificateKeyFilePath, input.CertificatePassword ?? string.Empty);
+
+                        certificates = new[]
+                        {
+                            CertificateLoader.LoadFromFile(
+                            input.CertificateFilePath,
+                            input.CertificateKeyFilePath,
+                            input.CertificatePassword),
+                        };
                         break;
+
                     case CertificateSource.String:
                         if (input.CertificateBase64String == null)
                             throw new ArgumentException("Base64 certificate string is required for CertificateSource.String authentication.");
-                        certificates = LoadCertificateFromBase64(input.CertificateBase64String, input.CertificatePassword ?? string.Empty);
+
+                        certificates = new[]
+                        {
+                            CertificateLoader.LoadFromBase64(
+                                input.CertificateBase64String,
+                                input.CertificatePassword),
+                        };
                         break;
+
                     default:
                         break;
                 }
@@ -91,9 +110,9 @@ public class MqttSender
 
         try
         {
-            var res = await mqttClient.ConnectAsync(options.Build(), cancellationToken);
+            await mqttClient.ConnectAsync(options.Build(), cancellationToken);
 
-            MqttQualityOfServiceLevel qos = (MqttQualityOfServiceLevel)input.QoS;
+            var qos = (MqttQualityOfServiceLevel)input.QoS;
 
             var mqttMessage = new MqttApplicationMessageBuilder()
                 .WithTopic(input.Topic)
@@ -115,83 +134,5 @@ public class MqttSender
         {
             await mqttClient.DisconnectAsync(new MqttClientDisconnectOptions(), cancellationToken);
         }
-    }
-
-    private static IEnumerable<X509Certificate2> LoadCertificateFromStore(string thumbprint, StoreName storeName, StoreLocation storeLocation)
-    {
-        using var store = new X509Store(storeName, storeLocation);
-        store.Open(OpenFlags.ReadOnly);
-
-        thumbprint = thumbprint.Replace(" ", string.Empty).ToUpperInvariant();
-
-        var certs = store.Certificates
-            .Find(X509FindType.FindByThumbprint, thumbprint, validOnly: false);
-
-        if (certs.Count == 0)
-            throw new ArgumentException($"Certificate with thumbprint '{thumbprint.Trim()}' not found.");
-
-        var cert = certs[0];
-
-        if (!cert.HasPrivateKey)
-            throw new InvalidCredentialException("Certificate does not contain a private key.");
-
-        return new[] { new X509Certificate2(cert) };
-    }
-
-    private static IEnumerable<X509Certificate2> LoadCertificateFromFile(string certificateFilePath, string? certificateKeyFilePath = null, string? password = null)
-    {
-        if (!File.Exists(certificateFilePath))
-            throw new FileNotFoundException("Certificate file not found.", certificateFilePath);
-
-        var extension = Path.GetExtension(certificateFilePath).ToLowerInvariant();
-
-        if (extension is ".pfx" or ".p12")
-        {
-            // PFX/PKCS#12 file
-            var cert = new X509Certificate2(
-                certificateFilePath,
-                password ?? string.Empty,
-                X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
-
-            if (!cert.HasPrivateKey)
-                throw new InvalidCredentialException("The PFX certificate does not contain a private key.");
-
-            return new[] { cert };
-        }
-        else if (extension is ".crt" or ".pem")
-        {
-            // PEM certificate. Must have key file
-            if (string.IsNullOrEmpty(certificateKeyFilePath))
-                throw new ArgumentException("Private key file path is required for PEM certificates.");
-
-            if (!File.Exists(certificateKeyFilePath))
-                throw new FileNotFoundException("Private key file not found.", certificateKeyFilePath);
-
-            var cert = X509Certificate2.CreateFromPemFile(certificateFilePath, certificateKeyFilePath);
-
-            if (!cert.HasPrivateKey)
-                throw new InvalidCredentialException("The PEM certificate or key is invalid or missing the private key.");
-
-            return new[] { cert };
-        }
-        else
-        {
-            throw new NotSupportedException($"Unsupported certificate file extension: {extension}");
-        }
-    }
-
-    private static IEnumerable<X509Certificate2> LoadCertificateFromBase64(string base64, string password)
-    {
-        var raw = Convert.FromBase64String(base64);
-
-        var cert = new X509Certificate2(
-                raw,
-                password,
-                X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.Exportable);
-
-        if (!cert.HasPrivateKey)
-            throw new InvalidCredentialException("Certificate does not contain a private key.");
-
-        return new[] { cert };
     }
 }

@@ -1,15 +1,14 @@
 namespace Frends.MQTT.Receive.Tests;
 
 using Frends.MQTT.Receive.Definitions;
+using Frends.MQTT.Receive.Helpers;
 using MQTTnet;
 using MQTTnet.Protocol;
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net.Security;
 using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -24,10 +23,6 @@ using System.Threading.Tasks;
 [TestFixture]
 internal class UnitTests
 {
-    /// <summary>
-    /// This test attempts to connect to an invalid broker address.
-    /// </summary>
-    /// <returns> Test succeeds when the connection is refused. </returns>
     [Test]
     public async Task Send_ShouldReturnErrorResult_WhenHostAddressIsInvalid()
     {
@@ -44,17 +39,13 @@ internal class UnitTests
         Assert.That(result.Error, Does.Contain("Error while connecting host"));
     }
 
-    /// <summary>
-    /// Test attempts to connect to an incorrect broker port.
-    /// </summary>
-    /// <returns> Success if it returns an error. </returns>
     [Test]
     public async Task Send_ShouldReturnErrorResult_WhenBrokerPortIsInvalid()
     {
         var input = new Input
         {
-            Host = "localhost", // dockerized Mosquitto broker
-            BrokerPort = 99999, // Invalid port number
+            Host = "localhost",
+            BrokerPort = 99999,
             Topic = "test/topic",
         };
 
@@ -160,6 +151,9 @@ internal class UnitTests
     [Test]
     public async Task ShouldSuccessfullyConnectToBrokerWithTlsAndCertificate()
     {
+        var certPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.crt");
+        var keyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.key");
+
         var input = new Input
         {
             Host = "localhost",
@@ -172,40 +166,37 @@ internal class UnitTests
             AllowInvalidCertificate = true,
             UseClientCertificate = true,
             CertificateSource = CertificateSource.File,
-            CertificateFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.crt"),
-            CertificateKeyFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.key"),
+            CertificateFilePath = certPath,
+            CertificateKeyFilePath = keyPath,
         };
 
         var subscribeResult = await MQTT.Receive(input, default);
+        Console.WriteLine(subscribeResult.Error);
         Assert.IsTrue(subscribeResult.Success);
 
         using var publisher = new MqttClientFactory().CreateMqttClient();
 
-        var tlsOptions = new MqttClientTlsOptionsBuilder().WithCertificateValidationHandler(
-                    o =>
-                    {
-                        if (o.SslPolicyErrors != System.Net.Security.SslPolicyErrors.None)
-                        {
-                            if (input.AllowInvalidCertificate)
-                                return true;
-                            else
-                                throw new InvalidCredentialException(o.SslPolicyErrors.ToString());
-                        }
-                        else
-                        {
-                            return true;
-                        }
-                    });
+        var tlsOptions = new MqttClientTlsOptionsBuilder()
+            .WithCertificateValidationHandler(o =>
+            {
+                if (o.SslPolicyErrors != SslPolicyErrors.None)
+                {
+                    if (input.AllowInvalidCertificate)
+                        return true;
+                    else
+                        throw new InvalidCredentialException(o.SslPolicyErrors.ToString());
+                }
 
-        tlsOptions.WithSslProtocols(SslProtocols.Tls12);
-
-        var certificates = LoadCertificateFromFile(input.CertificateFilePath, input.CertificateKeyFilePath, string.Empty);
-        tlsOptions.WithClientCertificates(certificates);
+                return true;
+            })
+            .WithSslProtocols(SslProtocols.Tls12)
+            .WithClientCertificates(new[] { CertificateLoader.LoadFromFile(certPath, keyPath) })
+            .Build();
 
         await publisher.ConnectAsync(
             new MqttClientOptionsBuilder()
                 .WithTcpServer(input.Host, input.BrokerPort)
-                .WithTlsOptions(tlsOptions.Build())
+                .WithTlsOptions(tlsOptions)
                 .Build());
 
         for (int i = 0; i < 6; i++)
@@ -220,47 +211,5 @@ internal class UnitTests
 
         var finalMessages = await MQTT.Receive(input, default);
         Assert.AreEqual(6, finalMessages.MessagesList.Count, "Missing messages. Check TLS handshake and broker logs.");
-    }
-
-    private static IEnumerable<X509Certificate2> LoadCertificateFromFile(string certificateFilePath, string? certificateKeyFilePath = null, string? password = null)
-    {
-        if (!File.Exists(certificateFilePath))
-            throw new FileNotFoundException("Certificate file not found.", certificateFilePath);
-
-        var extension = Path.GetExtension(certificateFilePath).ToLowerInvariant();
-
-        if (extension is ".pfx" or ".p12")
-        {
-            // PFX/PKCS#12 file
-            var cert = new X509Certificate2(
-                certificateFilePath,
-                password ?? string.Empty,
-                X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
-
-            if (!cert.HasPrivateKey)
-                throw new InvalidCredentialException("The PFX certificate does not contain a private key.");
-
-            return new[] { cert };
-        }
-        else if (extension is ".crt" or ".pem")
-        {
-            // PEM certificate. Must have key file
-            if (string.IsNullOrEmpty(certificateKeyFilePath))
-                throw new ArgumentException("Private key file path is required for PEM certificates.");
-
-            if (!File.Exists(certificateKeyFilePath))
-                throw new FileNotFoundException("Private key file not found.", certificateKeyFilePath);
-
-            var cert = X509Certificate2.CreateFromPemFile(certificateFilePath, certificateKeyFilePath);
-
-            if (!cert.HasPrivateKey)
-                throw new InvalidCredentialException("The PEM certificate or key is invalid or missing the private key.");
-
-            return new[] { cert };
-        }
-        else
-        {
-            throw new NotSupportedException($"Unsupported certificate file extension: {extension}");
-        }
     }
 }

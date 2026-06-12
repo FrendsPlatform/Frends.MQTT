@@ -2,7 +2,6 @@
 
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Runtime.InteropServices;
 
 /// <summary>
 /// Input class contains parameters of the broker connection.
@@ -84,7 +83,7 @@ public class Input
     /// <example>3F7A9C4D1B2E6F8890A1B2C3D4E5F6789012ABCD</example>
     [UIHint(nameof(CertificateSource), "", CertificateSource.CertificateStore)]
     [DisplayFormat(DataFormatString = "Text")]
-    public string? CertificateThumbprint { get; set; }
+    public string CertificateThumbprint { get; set; }
 
     /// <summary>
     /// Certification store
@@ -98,21 +97,21 @@ public class Input
     /// </summary>
     /// <example>C:\cert.pfx</example>
     [UIHint(nameof(CertificateSource), "", CertificateSource.File)]
-    public string? CertificateFilePath { get; set; }
+    public string CertificateFilePath { get; set; }
 
     /// <summary>
     /// Path to the certificate key file to be used in authentication. Needed when used PEM typed certificates.
     /// </summary>
     /// <example>C:\cert.key</example>
     [UIHint(nameof(CertificateSource), "", CertificateSource.File)]
-    public string? CertificateKeyFilePath { get; set; }
+    public string CertificateKeyFilePath { get; set; }
 
     /// <summary>
     /// The certificate as Base64 string to be used in authentication.
     /// </summary>
     /// <example>C:\cert.pfx</example>
     [UIHint(nameof(CertificateSource), "", CertificateSource.String)]
-    public string? CertificateBase64String { get; set; }
+    public string CertificateBase64String { get; set; }
 
     /// <summary>
     /// Password for the certificate file.
@@ -121,7 +120,7 @@ public class Input
     [UIHint(nameof(CertificateSource), "", CertificateSource.File, CertificateSource.String)]
     [DisplayFormat(DataFormatString = "Text")]
     [PasswordPropertyText]
-    public string? CertificatePassword { get; set; }
+    public string CertificatePassword { get; set; }
 
     /// <summary>
     /// When true, allows connections even if the server's TLS certificate is invalid (e.g., self-signed,

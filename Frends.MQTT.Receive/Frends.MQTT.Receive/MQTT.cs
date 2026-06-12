@@ -4,6 +4,7 @@ using System;
 using System.ComponentModel;
 using System.Threading;
 using Frends.MQTT.Receive.Definitions;
+using Frends.MQTT.Receive.Helpers;
 using System.Threading.Tasks;
 
 /// <summary>

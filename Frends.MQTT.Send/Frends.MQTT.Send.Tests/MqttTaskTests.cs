@@ -6,6 +6,7 @@ using Frends.MQTT.Send.Tests.Helper;
 using NUnit.Framework;
 using System;
 using System.IO;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -176,74 +177,92 @@ public class MqttTaskTests
         Assert.AreEqual(2, finalMessages.MessagesList.Count);
     }
 
-    // Test is only working on Linux OS.
     [Test]
     public async Task ShouldSuccessfullyConnectToBrokerWithTlsAndPEMCertificate()
     {
-        if (OperatingSystem.IsWindows())
+        var certPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.crt");
+        var keyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.key");
+
+        using var ephemeral = X509Certificate2.CreateFromPemFile(certPath, keyPath);
+        var pfxBytes = ephemeral.Export(X509ContentType.Pfx);
+        using var cert = new X509Certificate2(pfxBytes, (string?)null,
+            X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+
+        DebugCertificate(cert);
+
+        var inputRecieve = new InputReceive
         {
-            Assert.Ignore("Skipping Linux-only test");
-        }
-        else
+            Host = "localhost",
+            BrokerPort = 8884,
+            ClientId = Guid.NewGuid().ToString(),
+            Topic = "example topic",
+            ReceivingTime = 10,
+            UseTls12 = true,
+            QoS = QoS.AtLeastOnce,
+            AllowInvalidCertificate = true,
+            UseClientCertificate = true,
+            CertificateSource = CertificateSource.File,
+            CertificateFilePath = certPath,
+            CertificateKeyFilePath = keyPath,
+        };
+
+        var connector = new MQTTConnectionCreator();
+        var subscribeResult = await connector.ConnectToBroker(inputRecieve, CancellationToken.None);
+
+        Assert.IsTrue(subscribeResult.Success, "Subscribe");
+
+        var inputSendOne = new Input
         {
-            var inputRecieve = new InputReceive
-            {
-                Host = "localhost",
-                BrokerPort = 8884,
-                ClientId = Guid.NewGuid().ToString(),
-                Topic = "example topic",
-                ReceivingTime = 10,
-                UseTls12 = true,
-                QoS = QoS.AtLeastOnce,
-                AllowInvalidCertificate = true,
-                UseClientCertificate = true,
-                CertificateSource = CertificateSource.File,
-                CertificateFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.crt"),
-                CertificateKeyFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.key"),
-            };
+            Host = "localhost",
+            BrokerPort = 8884,
+            Topic = "example topic",
+            Message = "Test message FRENDS 1" + DateTime.Now.ToString(),
+            AllowInvalidCertificate = true,
+            UseTls12 = true,
+            QoS = QoS.AtLeastOnce,
+            UseClientCertificate = true,
+            CertificateSource = CertificateSource.File,
+            CertificateFilePath = certPath,
+            CertificateKeyFilePath = keyPath,
+        };
 
-            var connector = new MQTTConnectionCreator();
-            var subscribeResult = await connector.ConnectToBroker(inputRecieve, CancellationToken.None);
+        var inputSendTwo = new Input
+        {
+            Host = "localhost",
+            BrokerPort = 8884,
+            Topic = "example topic",
+            Message = "Test message FRENDS 2" + DateTime.Now.ToString(),
+            AllowInvalidCertificate = true,
+            UseTls12 = true,
+            QoS = QoS.AtLeastOnce,
+            UseClientCertificate = true,
+            CertificateSource = CertificateSource.File,
+            CertificateFilePath = certPath,
+            CertificateKeyFilePath = keyPath,
+        };
 
-            Assert.IsTrue(subscribeResult.Success, "Subscribe");
+        var sendResultOne = await MQTT.Send(inputSendOne, CancellationToken.None);
+        var sendResultTwo = await MQTT.Send(inputSendTwo, CancellationToken.None);
+        Assert.IsTrue(sendResultOne.Success, "Test1");
+        Assert.IsTrue(sendResultTwo.Success, "Test2");
 
-            var inputSendOne = new Input
-            {
-                Host = "localhost",
-                BrokerPort = 8884,
-                Topic = "example topic",
-                Message = "Test message FRENDS 1" + DateTime.Now.ToString(),
-                AllowInvalidCertificate = true,
-                UseTls12 = true,
-                QoS = QoS.AtLeastOnce,
-                UseClientCertificate = true,
-                CertificateSource = CertificateSource.File,
-                CertificateFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.crt"),
-                CertificateKeyFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.key"),
-            };
+        var finalMessages = await connector.ConnectToBroker(inputRecieve, CancellationToken.None);
+        Assert.AreEqual(2, finalMessages.MessagesList.Count);
+    }
 
-            var inputSendTwo = new Input
-            {
-                Host = "localhost",
-                BrokerPort = 8884,
-                Topic = "example topic",
-                Message = "Test message FRENDS 2" + DateTime.Now.ToString(),
-                AllowInvalidCertificate = true,
-                UseTls12 = true,
-                QoS = QoS.AtLeastOnce,
-                UseClientCertificate = true,
-                CertificateSource = CertificateSource.File,
-                CertificateFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.crt"),
-                CertificateKeyFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.key"),
-            };
+    private static void DebugCertificate(X509Certificate2 cert)
+    {
+        Console.WriteLine($"Subject:       {cert.Subject}");
+        Console.WriteLine($"HasPrivateKey: {cert.HasPrivateKey}");
+        Console.WriteLine($"KeyAlgorithm:  {cert.GetKeyAlgorithm()}");
 
-            var sendResultOne = await MQTT.Send(inputSendOne, CancellationToken.None);
-            var sendResultTwo = await MQTT.Send(inputSendTwo, CancellationToken.None);
-            Assert.IsTrue(sendResultOne.Success, "Test1");
-            Assert.IsTrue(sendResultTwo.Success, "Test2");
+        using var rsa = cert.GetRSAPrivateKey();
+        using var ecdsa = cert.GetECDsaPrivateKey();
 
-            var finalMessages = await connector.ConnectToBroker(inputRecieve, CancellationToken.None);
-            Assert.AreEqual(2, finalMessages.MessagesList.Count);
-        }
+        Console.WriteLine($"RSA key:       {rsa?.GetType().FullName ?? "null"}");
+        Console.WriteLine($"ECDsa key:     {ecdsa?.GetType().FullName ?? "null"}");
+
+        if (rsa != null) Console.WriteLine($"RSA key type:  {rsa.GetType().Name}");
+        if (ecdsa != null) Console.WriteLine($"ECDsa key type: {ecdsa.GetType().Name}");
     }
 }
