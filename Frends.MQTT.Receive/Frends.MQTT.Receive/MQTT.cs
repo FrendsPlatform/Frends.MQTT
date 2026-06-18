@@ -1,6 +1,5 @@
 ﻿namespace Frends.MQTT.Receive;
 
-using System;
 using System.ComponentModel;
 using System.Threading;
 using Frends.MQTT.Receive.Definitions;
@@ -17,20 +16,14 @@ public static class MQTT
     /// [Documentation](https://tasks.frends.com/tasks/frends-tasks/Frends.MQTT.Receive).
     /// </summary>
     /// <param name="input">MQTT broker connection options: broker address, port, duration of task, topic subscribed to, (optional) previous session id, TLS (y/n), QoS </param>
+    /// <param name="options">Additional options</param>
     /// <param name="cancellationToken">Cancellation token given by Frends.</param>
     /// <returns>Object { bool Success, string CurrentClientId, string Error, List(string) MessagesList }</returns>
-    public static async Task<Result> Receive([PropertyTab] Input input, CancellationToken cancellationToken)
+    public static async Task<Result> Receive([PropertyTab] Input input, [PropertyTab] Options options, CancellationToken cancellationToken)
     {
-        try
-        {
-            var connector = new MQTTConnectionCreator();
-            var result = await connector.ConnectToBroker(input, cancellationToken);
+        var connector = new MQTTConnectionCreator();
+        var result = await connector.ConnectToBroker(input, options, cancellationToken);
 
-            return result;
-        }
-        catch (Exception ex)
-        {
-            return new Result(success: false, null, error: ex.Message, null);
-        }
+        return result;
     }
 }

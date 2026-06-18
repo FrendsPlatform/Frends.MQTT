@@ -28,6 +28,9 @@ internal static class CertificateLoader
     /// <summary>
     /// Loads a certificate from the Windows certificate store by thumbprint.
     /// </summary>
+    /// <param name="thumbprint">The thumbprint of the certificate to load.</param>
+    /// <param name="storeName">The certificate store name.</param>
+    /// <param name="storeLocation">The certificate store location.</param>
     /// <returns>X509Certificate2</returns>
     internal static X509Certificate2 LoadFromStore(string thumbprint, StoreName storeName, StoreLocation storeLocation)
     {
@@ -54,7 +57,15 @@ internal static class CertificateLoader
     /// Loads a certificate from a PFX/P12 or PEM/CRT file.
     /// For PEM, a separate private key file path is required.
     /// </summary>
-    internal static X509Certificate2 LoadFromFile(string certificateFilePath, string? keyFilePath = null, string? password = null)
+    /// <param name="certificateFilePath">The path to the certificate file.</param>
+    /// <param name="keyFilePath">
+    /// The path to the private key file when loading PEM/CRT certificates.
+    /// </param>
+    /// <param name="password">
+    /// The password used to open a PFX/P12 certificate file, if required.
+    /// </param>
+    /// <returns>The loaded certificate.</returns>
+    internal static X509Certificate2 LoadFromFile(string certificateFilePath, string keyFilePath = null, string password = null)
     {
         if (!File.Exists(certificateFilePath))
             throw new FileNotFoundException("Certificate file not found.", certificateFilePath);
@@ -78,6 +89,11 @@ internal static class CertificateLoader
     /// <summary>
     /// Loads a certificate from a base64-encoded PFX string.
     /// </summary>
+    /// <param name="base64">The Base64-encoded certificate content.</param>
+    /// <param name="password">
+    /// The password used to open the certificate, if required.
+    /// </param>
+    /// <returns>The loaded certificate.</returns>
     internal static X509Certificate2 LoadFromBase64(string base64, string password = null)
     {
         if (string.IsNullOrWhiteSpace(base64))

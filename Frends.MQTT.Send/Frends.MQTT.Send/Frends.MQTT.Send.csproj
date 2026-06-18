@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
 		<LangVersion>Latest</LangVersion>
-		<Version>1.0.2</Version>
+		<Version>1.0.3</Version>
 		<Authors>Frends</Authors>
 		<Copyright>Frends</Copyright>
 		<Company>Frends</Company>
@@ -31,12 +31,16 @@
 		
 	</ItemGroup>
 	<ItemGroup>
-    <PackageReference Include="MQTTnet" Version="5.0.1.1416" />
-	<PackageReference Include="Microsoft.Bcl.Cryptography" Version="9.0.0" />
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<PackageReference Include="MQTTnet" Version="5.0.1.1416" />
+		<PackageReference Include="Microsoft.Bcl.Cryptography" Version="9.0.0" />
+		<PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
     </ItemGroup>
 
 </Project>

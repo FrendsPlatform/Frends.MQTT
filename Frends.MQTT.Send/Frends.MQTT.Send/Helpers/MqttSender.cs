@@ -1,11 +1,11 @@
 namespace Frends.MQTT.Send;
 
 using Frends.MQTT.Send.Definitions;
+using Frends.MQTT.Send.Enums;
 using Frends.MQTT.Send.Helpers;
 using MQTTnet;
 using MQTTnet.Protocol;
 using System;
-using System.Collections.Generic;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
@@ -20,16 +20,21 @@ public class MqttSender
     /// Method to connect to a MQTT broker, publishes a message to a given topic, then disconnects.
     /// </summary>
     /// <param name="input">MQTT publish connection options: broker address, port, topic to publish to, message content, TLS (y/n), QoS level, optional username and password, and option to allow invalid certificates.</param>
+    /// <param name="options">Additional options</param>
     /// <param name="cancellationToken">Cancellation token given by Frends.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public async Task Send(Input input, CancellationToken cancellationToken)
+    public async Task<Result> Send(Input input, Options options, CancellationToken cancellationToken)
     {
         var factory = new MqttClientFactory();
         using var mqttClient = factory.CreateMqttClient();
 
-        var options = new MqttClientOptionsBuilder()
+        var mqttOptions = new MqttClientOptionsBuilder()
             .WithTcpServer(input.Host, input.BrokerPort)
             .WithCleanSession();
+
+        bool isCertificateAuth = input.AuthenticationMethod is AuthenticationMethod.ClientCertificateFromStore
+            or AuthenticationMethod.ClientCertificateFromFile
+            or AuthenticationMethod.ClientCertificateFromBase64String;
 
         if (input.UseTls12)
         {
@@ -51,72 +56,72 @@ public class MqttSender
 
             tlsOptions.WithSslProtocols(SslProtocols.Tls12);
 
-            if (input.UseClientCertificate)
+            if (isCertificateAuth)
             {
-                IEnumerable<X509Certificate2> certificates = Array.Empty<X509Certificate2>();
-
-                switch (input.CertificateSource)
+                var certificates = input.AuthenticationMethod switch
                 {
-                    case CertificateSource.CertificateStore:
-                        if (input.CertificateThumbprint == null)
-                            throw new ArgumentException("CertificateThumbprint cannot be empty when CertificateStore is selected.");
-
-                        certificates = new[]
+                    AuthenticationMethod.ClientCertificateFromStore =>
+                        new[]
                         {
                             CertificateLoader.LoadFromStore(
-                            input.CertificateThumbprint,
-                            StoreName.My,
-                            input.CertificateStoreLocation is CertificateStoreLocation.LocalMachine ? StoreLocation.LocalMachine : StoreLocation.CurrentUser),
-                        };
-                        break;
+                                input.CertificateThumbprint
+                                    ?? throw new ArgumentException("CertificateThumbprint cannot be empty when CertificateStore is selected."),
+                                StoreName.My,
+                                input.CertificateStoreLocation is CertificateStoreLocation.LocalMachine ? StoreLocation.LocalMachine : StoreLocation.CurrentUser),
+                        },
 
-                    case CertificateSource.File:
-                        if (input.CertificateFilePath == null)
-                            throw new ArgumentException("File path is required for CertificateSource.File authentication.");
-
-                        certificates = new[]
+                    AuthenticationMethod.ClientCertificateFromFile =>
+                        new[]
                         {
                             CertificateLoader.LoadFromFile(
-                            input.CertificateFilePath,
-                            input.CertificateKeyFilePath,
-                            input.CertificatePassword),
-                        };
-                        break;
+                                input.CertificateFilePath
+                                    ?? throw new ArgumentException("File path is required for CertificateSource.File authentication."),
+                                input.CertificateKeyFilePath,
+                                input.CertificatePassword),
+                        },
 
-                    case CertificateSource.String:
-                        if (input.CertificateBase64String == null)
-                            throw new ArgumentException("Base64 certificate string is required for CertificateSource.String authentication.");
-
-                        certificates = new[]
+                    AuthenticationMethod.ClientCertificateFromBase64String =>
+                        new[]
                         {
                             CertificateLoader.LoadFromBase64(
-                                input.CertificateBase64String,
+                                input.CertificateBase64String
+                                    ?? throw new ArgumentException("Base64 certificate string is required for CertificateSource.String authentication."),
                                 input.CertificatePassword),
-                        };
-                        break;
+                        },
 
-                    default:
-                        break;
-                }
+                    _ => throw new NotSupportedException($"Unsupported Authentication method: {input.AuthenticationMethod}")
+                };
 
                 tlsOptions.WithClientCertificates(certificates);
             }
 
-            options.WithTlsOptions(tlsOptions.Build());
+            mqttOptions.WithTlsOptions(tlsOptions.Build());
         }
 
-        if (!string.IsNullOrEmpty(input.Username) && !string.IsNullOrEmpty(input.Password))
-            options.WithCredentials(input.Username, input.Password);
+        switch (input.AuthenticationMethod)
+        {
+            case AuthenticationMethod.ClientCertificateFromFile:
+            case AuthenticationMethod.ClientCertificateFromStore:
+            case AuthenticationMethod.ClientCertificateFromBase64String:
+                if (!string.IsNullOrEmpty(input.ClientAuthenticationName))
+                    mqttOptions.WithCredentials(input.ClientAuthenticationName, "placeholder");
+                break;
+
+            case AuthenticationMethod.UsernamePassword:
+                if (!string.IsNullOrEmpty(input.Username) && !string.IsNullOrEmpty(input.Password))
+                    mqttOptions.WithCredentials(input.Username, input.Password);
+                break;
+        }
 
         try
         {
-            await mqttClient.ConnectAsync(options.Build(), cancellationToken);
+            await mqttClient.ConnectAsync(mqttOptions.Build(), cancellationToken);
 
             var qos = (MqttQualityOfServiceLevel)input.QoS;
 
             var mqttMessage = new MqttApplicationMessageBuilder()
                 .WithTopic(input.Topic)
-                .WithPayload(input.Message)
+                .WithPayload(input.Message.Payload)
                 .WithQualityOfServiceLevel(qos)
                 .Build();
 
@@ -124,15 +129,21 @@ public class MqttSender
         }
         catch (OperationCanceledException ex)
         {
-            throw new MqttSenderException("MQTT operation was canceled", ex);
+            return new MqttSenderException("MQTT operation was canceled", ex).Handle(options);
         }
         catch (Exception ex)
         {
-            throw new MqttSenderException("Failed to send MQTT message", ex);
+            return new MqttSenderException("Failed to send MQTT message", ex).Handle(options);
         }
         finally
         {
             await mqttClient.DisconnectAsync(new MqttClientDisconnectOptions(), cancellationToken);
         }
+
+        return new Result
+        {
+            Success = true,
+            Data = "Message sent.",
+        };
     }
 }

@@ -16,20 +16,14 @@ public static class MQTT
     /// [Documentation](https://tasks.frends.com/tasks/frends-tasks/Frends.MQTT.Send).
     /// </summary>
     /// <param name="input">MQTT publish connection options: broker address, port, topic to publish to, message content, TLS (y/n), QoS level, optional username and password, and option to allow invalid certificates.</param>
+    /// <param name="options">Additional options</param>
     /// <param name="cancellationToken">Cancellation token given by Frends.</param>
     /// <returns>Object { bool Success, string Data, string Error }</returns>
-    public static async Task<Result> Send([PropertyTab] Input input, CancellationToken cancellationToken)
+    public static async Task<Result> Send([PropertyTab] Input input, Options options, CancellationToken cancellationToken)
     {
-        try
-        {
-            var mqttSender = new MqttSender();
-            await mqttSender.Send(input, cancellationToken);
+        var mqttSender = new MqttSender();
+        var result = await mqttSender.Send(input, options, cancellationToken);
 
-            return new Result(true, "Message sent.", string.Empty);
-        }
-        catch (Exception ex)
-        {
-            return new Result(false, null, $"Error: {ex.Message}");
-        }
+        return result;
     }
 }

@@ -1,11 +1,14 @@
 ﻿namespace Frends.MQTT.Receive.Helpers;
 
 using Frends.MQTT.Receive.Definitions;
+using Frends.MQTT.Receive.Enums;
 using MQTTnet;
 using MQTTnet.Protocol;
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,6 +17,7 @@ internal class MQTTConnectionCreator
 {
     public async Task<Result> ConnectToBroker(
         Input taskInput,
+        Options taskOptions,
         CancellationToken cancellationToken)
     {
         var factory = new MqttClientFactory();
@@ -32,6 +36,13 @@ internal class MQTTConnectionCreator
             .WithSessionExpiryInterval(sessionExpiryInterval: uint.MaxValue)
             .WithKeepAlivePeriod(TimeSpan.FromSeconds(taskInput.ReceivingTime))
             .WithClientId(clientID);
+
+        bool isCertificateAuth = taskInput.AuthenticationMethod is AuthenticationMethod.ClientCertificateFromStore
+            or AuthenticationMethod.ClientCertificateFromFile
+            or AuthenticationMethod.ClientCertificateFromBase64String;
+
+        if (isCertificateAuth && !taskInput.UseTls12)
+            throw new ArgumentException("UseTls12 must be enabled when using a client certificate authentication method.");
 
         if (taskInput.UseTls12)
         {
@@ -53,21 +64,21 @@ internal class MQTTConnectionCreator
 
             tlsOptions.WithSslProtocols(SslProtocols.Tls12);
 
-            if (taskInput.UseClientCertificate)
+            if (isCertificateAuth)
             {
-                var certificates = taskInput.CertificateSource switch
+                var certificates = taskInput.AuthenticationMethod switch
                 {
-                    CertificateSource.CertificateStore =>
+                    AuthenticationMethod.ClientCertificateFromStore =>
                         new[]
                         {
                             CertificateLoader.LoadFromStore(
                                 taskInput.CertificateThumbprint
                                     ?? throw new ArgumentException("CertificateThumbprint cannot be empty when CertificateStore is selected."),
-                                System.Security.Cryptography.X509Certificates.StoreName.My,
-                                taskInput.CertificateStoreLocation is CertificateStoreLocation.LocalMachine ? System.Security.Cryptography.X509Certificates.StoreLocation.LocalMachine : System.Security.Cryptography.X509Certificates.StoreLocation.CurrentUser),
+                                StoreName.My,
+                                taskInput.CertificateStoreLocation is CertificateStoreLocation.LocalMachine ? StoreLocation.LocalMachine : StoreLocation.CurrentUser),
                         },
 
-                    CertificateSource.File =>
+                    AuthenticationMethod.ClientCertificateFromFile =>
                         new[]
                         {
                             CertificateLoader.LoadFromFile(
@@ -77,7 +88,7 @@ internal class MQTTConnectionCreator
                                 taskInput.CertificatePassword),
                         },
 
-                    CertificateSource.String =>
+                    AuthenticationMethod.ClientCertificateFromBase64String =>
                         new[]
                         {
                             CertificateLoader.LoadFromBase64(
@@ -86,7 +97,7 @@ internal class MQTTConnectionCreator
                                 taskInput.CertificatePassword),
                         },
 
-                    _ => throw new NotSupportedException($"Unsupported CertificateSource: {taskInput.CertificateSource}")
+                    _ => throw new NotSupportedException($"Unsupported Authentication method: {taskInput.AuthenticationMethod}")
                 };
 
                 tlsOptions.WithClientCertificates(certificates);
@@ -95,32 +106,67 @@ internal class MQTTConnectionCreator
             options.WithTlsOptions(tlsOptions.Build());
         }
 
-        if (!string.IsNullOrEmpty(taskInput.Username) && !string.IsNullOrEmpty(taskInput.Password))
-            options.WithCredentials(taskInput.Username, taskInput.Password);
+        switch (taskInput.AuthenticationMethod)
+        {
+            case AuthenticationMethod.ClientCertificateFromFile:
+            case AuthenticationMethod.ClientCertificateFromStore:
+            case AuthenticationMethod.ClientCertificateFromBase64String:
+                if (!string.IsNullOrEmpty(taskInput.ClientAuthenticationName))
+                    options.WithCredentials(taskInput.ClientAuthenticationName, "placeholder");
+                break;
 
-        var messagesList = new ConcurrentQueue<string>();
+            case AuthenticationMethod.UsernamePassword:
+                if (!string.IsNullOrEmpty(taskInput.Username) && !string.IsNullOrEmpty(taskInput.Password))
+                    options.WithCredentials(taskInput.Username, taskInput.Password);
+                break;
+        }
+
+        var messagesList = new ConcurrentQueue<MqttMessage>();
 
         var handler = (Func<MqttApplicationMessageReceivedEventArgs, Task>)(e =>
         {
-            var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
-            messagesList.Enqueue(payload);
+            var message = new MqttMessage
+            {
+                Payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload),
+                Topic = e.ApplicationMessage.Topic,
+                QoS = e.ApplicationMessage.QualityOfServiceLevel,
+                Retain = e.ApplicationMessage.Retain,
+                ContentType = e.ApplicationMessage.ContentType,
+                UserProperties = e.ApplicationMessage.UserProperties?.ToDictionary(p => p.Name, p => p.Value),
+                ReceivedAt = DateTime.UtcNow,
+            };
+
+            messagesList.Enqueue(message);
             return Task.CompletedTask;
         });
 
         mqttClient.ApplicationMessageReceivedAsync += handler;
 
         MqttClientConnectResult connectionResponse = null;
+        string disconnectInfo = null;
+
         try
         {
+            mqttClient.DisconnectedAsync += e =>
+            {
+                disconnectInfo = $"DisconnectInfo: Reason={e.Reason}, ReasonString={e.ReasonString}, Exception={e.Exception?.Message}";
+                return Task.CompletedTask;
+            };
+
             connectionResponse = await mqttClient.ConnectAsync(options.Build(), cancellationToken);
         }
         catch (OperationCanceledException cException)
         {
-            return new Result(success: false, clientID: clientID, cException.Message, messagesList: messagesList);
+            return ErrorHandler.Handle(cException, taskOptions);
         }
         catch (Exception ex)
         {
-            return new Result(success: false, clientID: clientID, error: $"Error while trying to connect to MQTT broker: {ex.Message}", messagesList: messagesList);
+            return new Exception($"Error while trying to connect to MQTT broker: {ex.Message}", ex).Handle(taskOptions);
+        }
+
+        if (connectionResponse.ResultCode != MqttClientConnectResultCode.Success)
+        {
+            return new ArgumentException($"Broker rejected connection: {connectionResponse.ResultCode}. ReasonString: {connectionResponse.ReasonString ?? "none provided"}. {disconnectInfo ?? string.Empty}").Handle(taskOptions);
         }
 
         var mqttSubscribeOptions = factory.CreateSubscribeOptionsBuilder()
@@ -137,20 +183,21 @@ internal class MQTTConnectionCreator
         }
         catch (OperationCanceledException cException)
         {
-            return new Result(success: false, clientID: clientID, $"Error while trying to subscribe to MQTT topic: {cException.Message}", messagesList: messagesList);
+            return new Exception($"Error while trying to subscribe to MQTT topic: {cException.Message}").Handle(taskOptions);
         }
         catch (Exception e)
         {
-            return new Result(success: false, clientID: clientID, $"Error while trying to subscribe to MQTT topic: {e.Message}", messagesList: messagesList);
+            return new Exception($"Error while trying to subscribe to MQTT topic: {e.Message} {disconnectInfo ?? string.Empty}").Handle(taskOptions);
         }
 
         await Task.Delay(taskInput.ReceivingTime * 1000, cancellationToken);
 
-        var result = new Result(
-            success: true,
-            clientID: clientID,
-            error: string.Empty,
-            messagesList: messagesList);
+        var result = new Result
+        {
+            Success = true,
+            CurrentClientId = clientID,
+            MessagesList = messagesList,
+        };
 
         mqttClient.ApplicationMessageReceivedAsync -= handler;
 
