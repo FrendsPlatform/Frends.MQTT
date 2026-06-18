@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿
+using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", Justification = "Following Frends documentation guidelines", Scope = "namespaceanddescendants", Target = "~N:Frends.MQTT.Send.Tests")]
 [assembly: SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1633:File should have header", Justification = "Following Frends documentation guidelines", Scope = "namespaceanddescendants", Target = "~N:Frends.MQTT.Send.Tests")]
@@ -13,3 +14,7 @@
 [assembly: SuppressMessage("Usage", "CA2211:Non-constant fields should not be visible", Justification = "Following Frends documentation guidelines", Scope = "namespaceanddescendants", Target = "~N:Frends.MQTT.Send.Tests")]
 [assembly: SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1629:Documentation text should end with a period", Justification = "Following Frends Tasks guidelines", Scope = "namespaceanddescendants", Target = "~N:Frends.MQTT.Send.Tests")]
 [assembly: SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1623:Property summary documentation should match accessors", Justification = "Following Frends guidelines", Scope = "namespaceanddescendants", Target = "~N:Frends.MQTT.Send.Tests")]
+[assembly: SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1623:Property summary documentation should match accessors", Justification = "Following Frends guidelines", Scope = "namespaceanddescendants", Target = "~N:Frends.MQTT.Send.Tests")]
+[assembly: SuppressMessage("StyleCop.CSharp.LayoutRules", "SA1503:Braces should not be omitted", Justification = "Following Frends guidelines", Scope = "namespaceanddescendants", Target = "~N:Frends.MQTT.Send.Tests")]
+[assembly: SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", Justification = "Following Frends guidelines", Scope = "member", Target = "~M:Frends.MQTT.Receive.Helpers.MQTTConnectionCreator.ConnectToBroker(Frends.MQTT.Send.Tests.Helper.InputReceive,Frends.MQTT.Send.Definitions.Options,System.Threading.CancellationToken)~System.Threading.Tasks.Task{Frends.MQTT.Send.Tests.Helper.ResultReceive}")]
+[assembly: SuppressMessage("StyleCop.CSharp.LayoutRules", "SA1503:Braces should not be omitted", Justification = "Following Frends guidelines", Scope = "member", Target = "~M:Frends.MQTT.Receive.Helpers.MQTTConnectionCreator.ConnectToBroker(Frends.MQTT.Send.Tests.Helper.InputReceive,Frends.MQTT.Send.Definitions.Options,System.Threading.CancellationToken)~System.Threading.Tasks.Task{Frends.MQTT.Send.Tests.Helper.ResultReceive}")]

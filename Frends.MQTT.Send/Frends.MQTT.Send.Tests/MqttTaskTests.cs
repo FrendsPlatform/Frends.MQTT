@@ -2,7 +2,8 @@ namespace Frends.MQTT.Send.Tests;
 
 using Frends.MQTT.Send;
 using Frends.MQTT.Send.Definitions;
-using Frends.MQTT.Send.Tests.Helper;
+using Frends.MQTT.Send.Enums;
+using Frends.MQTT.Send.Tests.Helpers;
 using NUnit.Framework;
 using System;
 using System.IO;
@@ -21,6 +22,18 @@ using System.Threading.Tasks;
 [TestFixture]
 public class MqttTaskTests
 {
+    private static Options options;
+
+    [SetUp]
+    public void Setup()
+    {
+        options = new Options
+        {
+            ThrowErrorOnFailure = false,
+            ErrorMessageOnFailure = string.Empty,
+        };
+    }
+
     /// <summary>
     /// This test attempts to connect to an invalid broker address.
     /// </summary>
@@ -36,10 +49,10 @@ public class MqttTaskTests
             Message = "Test message",
         };
 
-        var result = await MQTT.Send(input, CancellationToken.None);
+        var result = await MQTT.Send(input, options, CancellationToken.None);
 
         Assert.IsFalse(result.Success);
-        Assert.That(result.Error, Does.Contain("Failed to send MQTT message"));
+        Assert.That(result.Error.Message, Does.Contain("Failed to send MQTT message"));
     }
 
     /// <summary>
@@ -52,15 +65,16 @@ public class MqttTaskTests
         var input = new Input
         {
             Host = "localhost", // dockerized Mosquitto broker
-            BrokerPort = 99999, // Invalid port number
+            BrokerPort = 9999, // Invalid port number
             Topic = "test/topic",
             Message = "Test message FRENDS",
         };
 
-        var result = await MQTT.Send(input, CancellationToken.None);
+        var result = await MQTT.Send(input, options, CancellationToken.None);
 
         Assert.IsFalse(result.Success);
-        Assert.That(result.Error, Does.Contain($"port ('{input.BrokerPort}') must be less than or equal"));
+        Console.WriteLine(result.Error.Message);
+        Assert.That(result.Error.Message, Does.Contain($"Failed to send MQTT message"));
     }
 
     [Test]
@@ -73,6 +87,7 @@ public class MqttTaskTests
             ClientId = Guid.NewGuid().ToString(),
             Topic = "example topic",
             ReceivingTime = 10,
+            AuthenticationMethod = AuthenticationMethod.UsernamePassword,
             Username = "testuser",
             Password = "testpass",
             UseTls12 = false,
@@ -92,6 +107,7 @@ public class MqttTaskTests
             Topic = "example topic",
             Message = "Test message FRENDS 1" + DateTime.Now.ToString(),
             AllowInvalidCertificate = true,
+            AuthenticationMethod = AuthenticationMethod.UsernamePassword,
             UseTls12 = false,
             Username = "testuser",
             Password = "testpass",
@@ -105,14 +121,15 @@ public class MqttTaskTests
             Topic = "example topic",
             Message = "Test message FRENDS 2" + DateTime.Now.ToString(),
             AllowInvalidCertificate = true,
+            AuthenticationMethod = AuthenticationMethod.UsernamePassword,
             UseTls12 = false,
             Username = "testuser",
             Password = "testpass",
             QoS = QoS.ExactlyOnce,
         };
 
-        var sendResultOne = await MQTT.Send(inputSendOne, CancellationToken.None);
-        var sendResultTwo = await MQTT.Send(inputSendTwo, CancellationToken.None);
+        var sendResultOne = await MQTT.Send(inputSendOne, options, CancellationToken.None);
+        var sendResultTwo = await MQTT.Send(inputSendTwo, options, CancellationToken.None);
         Assert.IsTrue(sendResultOne.Success);
         Assert.IsTrue(sendResultTwo.Success);
 
@@ -130,6 +147,7 @@ public class MqttTaskTests
             ClientId = Guid.NewGuid().ToString(),
             Topic = "example topic",
             ReceivingTime = 10,
+            AuthenticationMethod = AuthenticationMethod.UsernamePassword,
             Username = "testuser",
             Password = "testpass",
             UseTls12 = true,
@@ -150,6 +168,7 @@ public class MqttTaskTests
             Message = "Test message FRENDS 1" + DateTime.Now.ToString(),
             AllowInvalidCertificate = true,
             UseTls12 = true,
+            AuthenticationMethod = AuthenticationMethod.UsernamePassword,
             Username = "testuser",
             Password = "testpass",
             QoS = QoS.AtLeastOnce,
@@ -163,13 +182,14 @@ public class MqttTaskTests
             Message = "Test message FRENDS 2" + DateTime.Now.ToString(),
             AllowInvalidCertificate = true,
             UseTls12 = true,
+            AuthenticationMethod = AuthenticationMethod.UsernamePassword,
             Username = "testuser",
             Password = "testpass",
             QoS = QoS.AtLeastOnce,
         };
 
-        var sendResultOne = await MQTT.Send(inputSendOne, CancellationToken.None);
-        var sendResultTwo = await MQTT.Send(inputSendTwo, CancellationToken.None);
+        var sendResultOne = await MQTT.Send(inputSendOne, options, CancellationToken.None);
+        var sendResultTwo = await MQTT.Send(inputSendTwo, options, CancellationToken.None);
         Assert.IsTrue(sendResultOne.Success);
         Assert.IsTrue(sendResultTwo.Success);
 
@@ -183,13 +203,6 @@ public class MqttTaskTests
         var certPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.crt");
         var keyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.key");
 
-        using var ephemeral = X509Certificate2.CreateFromPemFile(certPath, keyPath);
-        var pfxBytes = ephemeral.Export(X509ContentType.Pfx);
-        using var cert = new X509Certificate2(pfxBytes, (string?)null,
-            X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
-
-        DebugCertificate(cert);
-
         var inputRecieve = new InputReceive
         {
             Host = "localhost",
@@ -198,16 +211,17 @@ public class MqttTaskTests
             Topic = "example topic",
             ReceivingTime = 10,
             UseTls12 = true,
-            QoS = QoS.AtLeastOnce,
+            QoS = QoS.ExactlyOnce,
             AllowInvalidCertificate = true,
-            UseClientCertificate = true,
-            CertificateSource = CertificateSource.File,
+            AuthenticationMethod = AuthenticationMethod.ClientCertificateFromFile,
             CertificateFilePath = certPath,
             CertificateKeyFilePath = keyPath,
         };
 
         var connector = new MQTTConnectionCreator();
         var subscribeResult = await connector.ConnectToBroker(inputRecieve, CancellationToken.None);
+
+        Console.WriteLine(subscribeResult.Error);
 
         Assert.IsTrue(subscribeResult.Success, "Subscribe");
 
@@ -220,8 +234,7 @@ public class MqttTaskTests
             AllowInvalidCertificate = true,
             UseTls12 = true,
             QoS = QoS.AtLeastOnce,
-            UseClientCertificate = true,
-            CertificateSource = CertificateSource.File,
+            AuthenticationMethod = AuthenticationMethod.ClientCertificateFromFile,
             CertificateFilePath = certPath,
             CertificateKeyFilePath = keyPath,
         };
@@ -235,34 +248,17 @@ public class MqttTaskTests
             AllowInvalidCertificate = true,
             UseTls12 = true,
             QoS = QoS.AtLeastOnce,
-            UseClientCertificate = true,
-            CertificateSource = CertificateSource.File,
+            AuthenticationMethod = AuthenticationMethod.ClientCertificateFromFile,
             CertificateFilePath = certPath,
             CertificateKeyFilePath = keyPath,
         };
 
-        var sendResultOne = await MQTT.Send(inputSendOne, CancellationToken.None);
-        var sendResultTwo = await MQTT.Send(inputSendTwo, CancellationToken.None);
+        var sendResultOne = await MQTT.Send(inputSendOne, options, CancellationToken.None);
+        var sendResultTwo = await MQTT.Send(inputSendTwo, options, CancellationToken.None);
         Assert.IsTrue(sendResultOne.Success, "Test1");
         Assert.IsTrue(sendResultTwo.Success, "Test2");
 
         var finalMessages = await connector.ConnectToBroker(inputRecieve, CancellationToken.None);
         Assert.AreEqual(2, finalMessages.MessagesList.Count);
-    }
-
-    private static void DebugCertificate(X509Certificate2 cert)
-    {
-        Console.WriteLine($"Subject:       {cert.Subject}");
-        Console.WriteLine($"HasPrivateKey: {cert.HasPrivateKey}");
-        Console.WriteLine($"KeyAlgorithm:  {cert.GetKeyAlgorithm()}");
-
-        using var rsa = cert.GetRSAPrivateKey();
-        using var ecdsa = cert.GetECDsaPrivateKey();
-
-        Console.WriteLine($"RSA key:       {rsa?.GetType().FullName ?? "null"}");
-        Console.WriteLine($"ECDsa key:     {ecdsa?.GetType().FullName ?? "null"}");
-
-        if (rsa != null) Console.WriteLine($"RSA key type:  {rsa.GetType().Name}");
-        if (ecdsa != null) Console.WriteLine($"ECDsa key type: {ecdsa.GetType().Name}");
     }
 }

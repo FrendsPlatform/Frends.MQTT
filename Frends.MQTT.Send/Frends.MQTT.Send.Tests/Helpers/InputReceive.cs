@@ -1,6 +1,6 @@
-﻿namespace Frends.MQTT.Send.Tests.Helper;
+﻿namespace Frends.MQTT.Send.Tests.Helpers;
 
-using Frends.MQTT.Send.Definitions;
+using Frends.MQTT.Send.Enums;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
@@ -52,36 +52,38 @@ public class InputReceive
     public QoS QoS { get; set; }
 
     /// <summary>
+    /// Method of how to authenticate to the host.
+    /// </summary>
+    /// <example>AuthenticationMethod.UsernamePassword</example>
+    public AuthenticationMethod AuthenticationMethod { get; set; }
+
+    /// <summary>
     /// Username for authentication.
     /// </summary>
     /// <example>testuser</example>
+    [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.UsernamePassword)]
     public string Username { get; set; }
 
     /// <summary>
     /// Password for authentication.
     /// </summary>
     /// <example>Password123</example>
+    [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.UsernamePassword)]
+    [PasswordPropertyText]
     public string Password { get; set; }
 
     /// <summary>
-    /// Determines whether certificate will be use in authentication.
+    /// Name used as the client authentication name.
     /// </summary>
-    /// <example>true</example>
-    [DefaultValue(false)]
-    public bool UseClientCertificate { get; set; }
-
-    /// <summary>
-    /// If set anything but CertificateSource .None Task will use certificate in authentication.
-    /// </summary>
-    /// <example>CertificateSource .Store</example>
-    [UIHint(nameof(UseClientCertificate), "", true)]
-    public CertificateSource CertificateSource { get; set; }
+    /// <example>your-client-authentication-name</example>
+    [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.ClientCertificateFromBase64String, AuthenticationMethod.ClientCertificateFromFile, AuthenticationMethod.ClientCertificateFromStore)]
+    public string ClientAuthenticationName { get; set; }
 
     /// <summary>
     /// Thumbprint to use to get the correct certificate from certificate store.
     /// </summary>
     /// <example>3F7A9C4D1B2E6F8890A1B2C3D4E5F6789012ABCD</example>
-    [UIHint(nameof(CertificateSource), "", CertificateSource.CertificateStore)]
+    [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.ClientCertificateFromStore)]
     [DisplayFormat(DataFormatString = "Text")]
     public string CertificateThumbprint { get; set; }
 
@@ -89,35 +91,35 @@ public class InputReceive
     /// Certification store
     /// </summary>
     /// <example>CertificateStoreLocation.CurrentUser</example>
-    [UIHint(nameof(CertificateSource), "", CertificateSource.CertificateStore)]
+    [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.ClientCertificateFromStore)]
     public CertificateStoreLocation CertificateStoreLocation { get; set; }
 
     /// <summary>
-    /// Path to the certificate file to be used in authentication.
+    /// File path to the certificate to be used in authentication.
     /// </summary>
     /// <example>C:\cert.pfx</example>
-    [UIHint(nameof(CertificateSource), "", CertificateSource.File)]
+    [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.ClientCertificateFromFile)]
     public string CertificateFilePath { get; set; }
 
     /// <summary>
     /// Path to the certificate key file to be used in authentication. Needed when used PEM typed certificates.
     /// </summary>
     /// <example>C:\cert.key</example>
-    [UIHint(nameof(CertificateSource), "", CertificateSource.File)]
+    [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.ClientCertificateFromFile)]
     public string CertificateKeyFilePath { get; set; }
 
     /// <summary>
     /// The certificate as Base64 string to be used in authentication.
     /// </summary>
-    /// <example>MIIJ0QIBAzCCCf8GCSqGSIb3DQEHAaCCCfAEggn0MIIC8TCCAdkGCSqGSIb3DQEH...</example>
-    [UIHint(nameof(CertificateSource), "", CertificateSource.String)]
+    /// <example>C:\cert.pfx</example>
+    [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.ClientCertificateFromBase64String)]
     public string CertificateBase64String { get; set; }
 
     /// <summary>
-    /// Password for the certificate file. Needed when using PFX typed certificates.
+    /// Password for the certificate file.
     /// </summary>
     /// <example>password</example>
-    [UIHint(nameof(CertificateSource), "", CertificateSource.File, CertificateSource.String)]
+    [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.ClientCertificateFromBase64String, AuthenticationMethod.ClientCertificateFromFile, AuthenticationMethod.ClientCertificateFromStore)]
     [DisplayFormat(DataFormatString = "Text")]
     [PasswordPropertyText]
     public string CertificatePassword { get; set; }
