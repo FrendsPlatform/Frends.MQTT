@@ -1,6 +1,7 @@
 namespace Frends.MQTT.Receive.Tests;
 
 using Frends.MQTT.Receive.Definitions;
+using Frends.MQTT.Receive.Enums;
 using Frends.MQTT.Receive.Helpers;
 using MQTTnet;
 using MQTTnet.Protocol;
@@ -23,6 +24,18 @@ using System.Threading.Tasks;
 [TestFixture]
 internal class UnitTests
 {
+    private static Options options;
+
+    [SetUp]
+    public void Setup()
+    {
+        options = new Options
+        {
+            ErrorMessageOnFailure = string.Empty,
+            ThrowErrorOnFailure = false,
+        };
+    }
+
     [Test]
     public async Task Send_ShouldReturnErrorResult_WhenHostAddressIsInvalid()
     {
@@ -33,10 +46,10 @@ internal class UnitTests
             Topic = "test/topic",
         };
 
-        var result = await MQTT.Receive(input, CancellationToken.None);
+        var result = await MQTT.Receive(input, options, CancellationToken.None);
 
         Assert.IsFalse(result.Success);
-        Assert.That(result.Error, Does.Contain("Error while connecting host"));
+        Assert.That(result.Error.Message, Does.Contain("Error while connecting host"));
     }
 
     [Test]
@@ -45,14 +58,15 @@ internal class UnitTests
         var input = new Input
         {
             Host = "localhost",
-            BrokerPort = 99999,
+            BrokerPort = 65535,
             Topic = "test/topic",
+            UseTls12 = false,
         };
 
-        var result = await MQTT.Receive(input, CancellationToken.None);
+        var result = await MQTT.Receive(input, options, CancellationToken.None);
 
         Assert.IsFalse(result.Success);
-        Assert.That(result.Error, Does.Contain($"port ('{input.BrokerPort}') must be less than or equal"));
+        Assert.That(result.Error.Message, Does.Contain($"Error while trying to connect to MQTT broker: Error while connecting host"));
     }
 
     [Test]
@@ -72,7 +86,7 @@ internal class UnitTests
             AllowInvalidCertificate = true,
         };
 
-        var subscribeResult = await MQTT.Receive(input, default);
+        var subscribeResult = await MQTT.Receive(input, options, default);
         Assert.IsTrue(subscribeResult.Success);
 
         using var publisher = new MqttClientFactory().CreateMqttClient();
@@ -92,7 +106,7 @@ internal class UnitTests
                     .Build());
         }
 
-        var receivedMessages = await MQTT.Receive(input, default);
+        var receivedMessages = await MQTT.Receive(input, options, default);
         Assert.IsTrue(receivedMessages.Success);
         Assert.AreEqual(6, receivedMessages.MessagesList.Count);
     }
@@ -114,7 +128,7 @@ internal class UnitTests
             AllowInvalidCertificate = true,
         };
 
-        var subscribeResult = await MQTT.Receive(input, default);
+        var subscribeResult = await MQTT.Receive(input, options, default);
         Assert.IsTrue(subscribeResult.Success);
 
         using var publisher = new MqttClientFactory().CreateMqttClient();
@@ -144,7 +158,7 @@ internal class UnitTests
                     .Build());
         }
 
-        var finalMessages = await MQTT.Receive(input, default);
+        var finalMessages = await MQTT.Receive(input, options, default);
         Assert.AreEqual(6, finalMessages.MessagesList.Count, "Missing messages. Check TLS handshake and broker logs.");
     }
 
@@ -164,14 +178,12 @@ internal class UnitTests
             UseTls12 = true,
             QoS = QoS.ExactlyOnce,
             AllowInvalidCertificate = true,
-            UseClientCertificate = true,
-            CertificateSource = CertificateSource.File,
+            AuthenticationMethod = AuthenticationMethod.ClientCertificateFromFile,
             CertificateFilePath = certPath,
             CertificateKeyFilePath = keyPath,
         };
 
-        var subscribeResult = await MQTT.Receive(input, default);
-        Console.WriteLine(subscribeResult.Error);
+        var subscribeResult = await MQTT.Receive(input, options, default);
         Assert.IsTrue(subscribeResult.Success);
 
         using var publisher = new MqttClientFactory().CreateMqttClient();
@@ -209,7 +221,7 @@ internal class UnitTests
                     .Build());
         }
 
-        var finalMessages = await MQTT.Receive(input, default);
+        var finalMessages = await MQTT.Receive(input, options, default);
         Assert.AreEqual(6, finalMessages.MessagesList.Count, "Missing messages. Check TLS handshake and broker logs.");
     }
 }
