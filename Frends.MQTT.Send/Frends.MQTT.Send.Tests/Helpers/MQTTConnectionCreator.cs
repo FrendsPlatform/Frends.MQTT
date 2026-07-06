@@ -2,6 +2,7 @@
 
 using Frends.MQTT.Send.Enums;
 using Frends.MQTT.Send.Helpers;
+using Frends.MQTT.Send.Definitions;
 using MQTTnet;
 using MQTTnet.Protocol;
 using System;
@@ -130,7 +131,6 @@ internal class MQTTConnectionCreator
             var message = new MqttMessage
             {
                 Payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload),
-                Topic = e.ApplicationMessage.Topic,
                 QoS = e.ApplicationMessage.QualityOfServiceLevel,
                 Retain = e.ApplicationMessage.Retain,
                 ContentType = e.ApplicationMessage.ContentType,

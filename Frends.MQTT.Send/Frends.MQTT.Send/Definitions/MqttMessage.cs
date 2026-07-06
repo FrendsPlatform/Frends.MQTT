@@ -16,12 +16,6 @@ public class MqttMessage
     public string Payload { get; set; }
 
     /// <summary>
-    /// The MQTT topic on which the message was received.
-    /// </summary>
-    /// <example>sensors/office/environment</example>
-    public string Topic { get; set; }
-
-    /// <summary>
     /// The Quality of Service level used for message delivery.
     /// </summary>
     /// <example>MqttQualityOfServiceLevel.AtLeastOnce</example>
@@ -32,6 +26,12 @@ public class MqttMessage
     /// </summary>
     /// <example>true</example>
     public bool Retain { get; set; }
+
+    /// <summary>
+    /// Correlation Id of the message. Can be left empty if it's not used.
+    /// </summary>
+    /// <example>3f29a1c4-9e2b-4d11-8a77-1b6e4f9c2d90</example>
+    public string CorrelationId { get; set; }
 
     /// <summary>
     /// The MIME type or format of the payload.

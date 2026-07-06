@@ -131,6 +131,7 @@ internal class MQTTConnectionCreator
                 Topic = e.ApplicationMessage.Topic,
                 QoS = e.ApplicationMessage.QualityOfServiceLevel,
                 Retain = e.ApplicationMessage.Retain,
+                CorrelationId = e.ApplicationMessage.CorrelationData != null ? Encoding.UTF8.GetString(e.ApplicationMessage.CorrelationData) : string.Empty,
                 ContentType = e.ApplicationMessage.ContentType,
                 UserProperties = e.ApplicationMessage.UserProperties?.ToDictionary(p => p.Name, p => p.Value),
                 ReceivedAt = DateTime.UtcNow,

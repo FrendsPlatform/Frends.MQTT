@@ -7,7 +7,6 @@ using Frends.MQTT.Send.Tests.Helpers;
 using NUnit.Framework;
 using System;
 using System.IO;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -46,7 +45,13 @@ public class MqttTaskTests
             Host = "invalid_address",
             BrokerPort = 1883,
             Topic = "test/topic",
-            Message = "Test message",
+            Message = new MqttMessage
+            {
+                Payload = "Test message",
+                QoS = MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce,
+                Retain = false,
+                ContentType = "plain/text",
+            },
         };
 
         var result = await MQTT.Send(input, options, CancellationToken.None);
@@ -67,7 +72,13 @@ public class MqttTaskTests
             Host = "localhost", // dockerized Mosquitto broker
             BrokerPort = 9999, // Invalid port number
             Topic = "test/topic",
-            Message = "Test message FRENDS",
+            Message = new MqttMessage
+            {
+                Payload = "Test message FRENDS",
+                QoS = MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce,
+                Retain = false,
+                ContentType = "plain/text",
+            },
         };
 
         var result = await MQTT.Send(input, options, CancellationToken.None);
@@ -105,13 +116,18 @@ public class MqttTaskTests
             Host = "localhost",
             BrokerPort = 1883,
             Topic = "example topic",
-            Message = "Test message FRENDS 1" + DateTime.Now.ToString(),
+            Message = new MqttMessage
+            {
+                Payload = "Test message FRENDS 1" + DateTime.Now.ToString(),
+                QoS = MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce,
+                Retain = false,
+                ContentType = "plain/text",
+            },
             AllowInvalidCertificate = true,
             AuthenticationMethod = AuthenticationMethod.UsernamePassword,
             UseTls12 = false,
             Username = "testuser",
             Password = "testpass",
-            QoS = QoS.ExactlyOnce,
         };
 
         var inputSendTwo = new Input
@@ -119,13 +135,18 @@ public class MqttTaskTests
             Host = "localhost",
             BrokerPort = 1883,
             Topic = "example topic",
-            Message = "Test message FRENDS 2" + DateTime.Now.ToString(),
+            Message = new MqttMessage
+            {
+                Payload = "Test message FRENDS 2" + DateTime.Now.ToString(),
+                QoS = MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce,
+                Retain = false,
+                ContentType = "plain/text",
+            },
             AllowInvalidCertificate = true,
             AuthenticationMethod = AuthenticationMethod.UsernamePassword,
             UseTls12 = false,
             Username = "testuser",
             Password = "testpass",
-            QoS = QoS.ExactlyOnce,
         };
 
         var sendResultOne = await MQTT.Send(inputSendOne, options, CancellationToken.None);
@@ -165,13 +186,18 @@ public class MqttTaskTests
             Host = "localhost",
             BrokerPort = 8883,
             Topic = "example topic",
-            Message = "Test message FRENDS 1" + DateTime.Now.ToString(),
+            Message = new MqttMessage
+            {
+                Payload = "Test message FRENDS 1" + DateTime.Now.ToString(),
+                QoS = MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce,
+                Retain = false,
+                ContentType = "plain/text",
+            },
             AllowInvalidCertificate = true,
             UseTls12 = true,
             AuthenticationMethod = AuthenticationMethod.UsernamePassword,
             Username = "testuser",
             Password = "testpass",
-            QoS = QoS.AtLeastOnce,
         };
 
         var inputSendTwo = new Input
@@ -179,13 +205,18 @@ public class MqttTaskTests
             Host = "localhost",
             BrokerPort = 8883,
             Topic = "example topic",
-            Message = "Test message FRENDS 2" + DateTime.Now.ToString(),
+            Message = new MqttMessage
+            {
+                Payload = "Test message FRENDS 2" + DateTime.Now.ToString(),
+                QoS = MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce,
+                Retain = false,
+                ContentType = "plain/text",
+            },
             AllowInvalidCertificate = true,
             UseTls12 = true,
             AuthenticationMethod = AuthenticationMethod.UsernamePassword,
             Username = "testuser",
             Password = "testpass",
-            QoS = QoS.AtLeastOnce,
         };
 
         var sendResultOne = await MQTT.Send(inputSendOne, options, CancellationToken.None);
@@ -198,10 +229,11 @@ public class MqttTaskTests
     }
 
     [Test]
-    public async Task ShouldSuccessfullyConnectToBrokerWithTlsAndPEMCertificate()
+    public async Task ShouldSuccessfullyConnectToBrokerWithTlsAndPFXCertificate()
     {
         var certPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.crt");
         var keyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.key");
+        var pfxCertPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.pfx");
 
         var inputRecieve = new InputReceive
         {
@@ -214,8 +246,9 @@ public class MqttTaskTests
             QoS = QoS.ExactlyOnce,
             AllowInvalidCertificate = true,
             AuthenticationMethod = AuthenticationMethod.ClientCertificateFromFile,
-            CertificateFilePath = certPath,
-            CertificateKeyFilePath = keyPath,
+            CertificateFilePath = pfxCertPath,
+            CertificatePassword = "clientpass",
+            CertificateKeyFilePath = string.Empty,
         };
 
         var connector = new MQTTConnectionCreator();
@@ -230,13 +263,19 @@ public class MqttTaskTests
             Host = "localhost",
             BrokerPort = 8884,
             Topic = "example topic",
-            Message = "Test message FRENDS 1" + DateTime.Now.ToString(),
+            Message = new MqttMessage
+            {
+                Payload = "Test message FRENDS 1" + DateTime.Now.ToString(),
+                QoS = MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce,
+                Retain = false,
+                ContentType = "plain/text",
+            },
             AllowInvalidCertificate = true,
             UseTls12 = true,
-            QoS = QoS.AtLeastOnce,
             AuthenticationMethod = AuthenticationMethod.ClientCertificateFromFile,
-            CertificateFilePath = certPath,
-            CertificateKeyFilePath = keyPath,
+            CertificateFilePath = pfxCertPath,
+            CertificatePassword = "clientpass",
+            CertificateKeyFilePath = string.Empty,
         };
 
         var inputSendTwo = new Input
@@ -244,13 +283,19 @@ public class MqttTaskTests
             Host = "localhost",
             BrokerPort = 8884,
             Topic = "example topic",
-            Message = "Test message FRENDS 2" + DateTime.Now.ToString(),
+            Message = new MqttMessage
+            {
+                Payload = "Test message FRENDS 2" + DateTime.Now.ToString(),
+                QoS = MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce,
+                Retain = false,
+                ContentType = "plain/text",
+            },
             AllowInvalidCertificate = true,
             UseTls12 = true,
-            QoS = QoS.AtLeastOnce,
             AuthenticationMethod = AuthenticationMethod.ClientCertificateFromFile,
-            CertificateFilePath = certPath,
-            CertificateKeyFilePath = keyPath,
+            CertificateFilePath = pfxCertPath,
+            CertificatePassword = "clientpass",
+            CertificateKeyFilePath = string.Empty,
         };
 
         var sendResultOne = await MQTT.Send(inputSendOne, options, CancellationToken.None);

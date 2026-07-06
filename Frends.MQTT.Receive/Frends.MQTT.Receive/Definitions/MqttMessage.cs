@@ -34,6 +34,12 @@ public class MqttMessage
     public bool Retain { get; set; }
 
     /// <summary>
+    /// Correlation Id of the message. Can be left empty if it's not used.
+    /// </summary>
+    /// <example>3f29a1c4-9e2b-4d11-8a77-1b6e4f9c2d90</example>
+    public string CorrelationId { get; set; }
+
+    /// <summary>
     /// The MIME type or format of the payload.
     /// </summary>
     /// <example>application/json</example>

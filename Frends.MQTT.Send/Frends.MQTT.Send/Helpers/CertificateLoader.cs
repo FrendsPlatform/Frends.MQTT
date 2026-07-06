@@ -135,7 +135,7 @@ internal static class CertificateLoader
         using var ephemeral = X509Certificate2.CreateFromPemFile(certPath, keyPath);
         var pfxBytes = ephemeral.Export(X509ContentType.Pfx);
 
-        var cert = new X509Certificate2(pfxBytes, password: (string)null, GetKeyStorageFlags());
+        var cert = new X509Certificate2(pfxBytes, (string)null, GetKeyStorageFlags());
 
         if (!cert.HasPrivateKey)
             throw new InvalidCredentialException("The PEM certificate or key is invalid or missing the private key.");

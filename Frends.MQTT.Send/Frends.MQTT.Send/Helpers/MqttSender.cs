@@ -8,6 +8,7 @@ using MQTTnet.Protocol;
 using System;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -117,15 +118,16 @@ public class MqttSender
         {
             await mqttClient.ConnectAsync(mqttOptions.Build(), cancellationToken);
 
-            var qos = (MqttQualityOfServiceLevel)input.QoS;
-
             var mqttMessage = new MqttApplicationMessageBuilder()
                 .WithTopic(input.Topic)
                 .WithPayload(input.Message.Payload)
-                .WithQualityOfServiceLevel(qos)
-                .Build();
+                .WithQualityOfServiceLevel(input.Message.QoS)
+                .WithRetainFlag(input.Message.Retain);
 
-            await mqttClient.PublishAsync(mqttMessage, cancellationToken);
+            if (!string.IsNullOrEmpty(input.Message.CorrelationId))
+                mqttMessage.WithCorrelationData(Encoding.UTF8.GetBytes(input.Message.CorrelationId));
+
+            await mqttClient.PublishAsync(mqttMessage.Build(), cancellationToken);
         }
         catch (OperationCanceledException ex)
         {

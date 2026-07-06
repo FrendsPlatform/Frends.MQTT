@@ -184,7 +184,7 @@ internal class UnitTests
         };
 
         var subscribeResult = await MQTT.Receive(input, options, default);
-        Assert.IsTrue(subscribeResult.Success);
+        Assert.IsTrue(subscribeResult.Success, "Subscribe");
 
         using var publisher = new MqttClientFactory().CreateMqttClient();
 

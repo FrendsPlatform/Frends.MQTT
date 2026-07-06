@@ -28,18 +28,11 @@ public class Input
     required public string Topic { get; set; }
 
     /// <summary>
-    /// Determines how the MqttMessage will be handed to the Task.
-    /// </summary>
-    /// <example>MessageType.MqttMessage</example>
-    required public MessageType MessageType { get; set; }
-
-    /// <summary>
     /// The message to be published.
     /// </summary>
     /// <example>
     /// {
     ///     "Payload": "{"temperature":22.5}",
-    ///     "Topic": "sensors/office",
     ///     "QoS": "AtLeastOnce",
     ///     "Retain": false,
     ///     "ContentType": "application/json",
@@ -52,34 +45,10 @@ public class Input
     public MqttMessage Message { get; set; }
 
     /// <summary>
-    /// The message as JSON string.
-    /// </summary>
-    /// <example>
-    /// {
-    ///     "Payload": "{"temperature":22.5}",
-    ///     "Topic": "sensors/office",
-    ///     "QoS": "AtLeastOnce",
-    ///     "Retain": false,
-    ///     "ContentType": "application/json",
-    ///     "UserProperties": {
-    ///       "DeviceId": "sensor-001"
-    ///     },
-    ///     "ReceivedAt": "2026-06-18T14:30:15Z"
-    ///   }
-    /// </example>
-    public string MqttMessageJson { get; set; }
-
-    /// <summary>
     /// Whether to use TLS authentication
     /// </summary>
     /// <example>false</example>
     public bool UseTls12 { get; set; }
-
-    /// <summary>
-    /// The Quality of Service (QoS) level for the MQTT session.
-    /// </summary>
-    /// <example>QoS.AtMostOnce</example>
-    public QoS QoS { get; set; }
 
     /// <summary>
     /// Method of how to authenticate to the host.
