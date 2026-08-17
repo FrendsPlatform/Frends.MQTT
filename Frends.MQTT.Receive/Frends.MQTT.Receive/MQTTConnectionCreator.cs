@@ -12,8 +12,14 @@ using MQTTnet;
 using MQTTnet.Protocol;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
+/// <summary>
+/// Creates and manages an MQTT client connection to a broker.
+/// </summary>
 internal class MQTTConnectionCreator
 {
+    /// <summary>
+    /// Connects to the MQTT broker and listens for messages for the configured duration.
+    /// </summary>
     public async Task<Result> ConnectToBroker(
         Input taskInput,
         CancellationToken cancellationToken)
