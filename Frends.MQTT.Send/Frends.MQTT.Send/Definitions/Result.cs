@@ -8,13 +8,13 @@ public class Result
     /// <summary>
     /// Initializes a new instance of the <see cref="Result"/> class.
     /// </summary>
-    /// <param name="success">Whether connection to an MQTT broker was successful or not.</param>
-    /// <param name="details">Returns a confirmation message on success.</param>
-    /// <param name="error">Error(s) if connecting to broker failed. Returns an empty string if no errors exist.</param>
-    public Result(bool success, string? details, string? error)
+    /// <param name="success">Whether the operation completed successfully.</param>
+    /// <param name="data">Returns a confirmation message on success.</param>
+    /// <param name="error">Error details. Null when Success is true.</param>
+    public Result(bool success, string? data = null, Error? error = null)
     {
         Success = success;
-        Data = details;
+        Data = data;
         Error = error;
     }
 
@@ -27,12 +27,12 @@ public class Result
     /// <summary>
     /// Returns a confirmation message on success.
     /// </summary>
-    /// <example>Message sent</example>
+    /// <example>Message sent.</example>
     public string? Data { get; private set; }
 
     /// <summary>
-    /// Error(s) if connecting to broker failed. Returns an empty string if no errors exist.
+    /// Error details. Null when Success is true.
     /// </summary>
-    /// <example>Connection refused</example>
-    public string? Error { get; private set; }
+    /// <example>null</example>
+    public Error? Error { get; private set; }
 }

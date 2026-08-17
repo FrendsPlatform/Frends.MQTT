@@ -19,6 +19,8 @@ namespace Frends.MQTT.Send.Tests
     [TestFixture]
     public class MqttTaskTests
     {
+        private static Options DefaultOptions() => new Options { ThrowErrorOnFailure = false };
+
         /// <summary>
         /// This test attempts to connect to an invalid broker address.
         /// </summary>
@@ -34,10 +36,10 @@ namespace Frends.MQTT.Send.Tests
                 Message = "Test message",
             };
 
-            var result = await MQTT.Send(input, CancellationToken.None);
+            var result = await MQTT.Send(input, DefaultOptions(), CancellationToken.None);
 
             Assert.IsFalse(result.Success);
-            Assert.That(result.Error, Does.Contain("Failed to send MQTT message"));
+            Assert.That(result.Error!.Message, Does.Contain("Failed to send MQTT message"));
         }
 
         /// <summary>
@@ -55,10 +57,10 @@ namespace Frends.MQTT.Send.Tests
                 Message = "Test message FRENDS",
             };
 
-            var result = await MQTT.Send(input, CancellationToken.None);
+            var result = await MQTT.Send(input, DefaultOptions(), CancellationToken.None);
 
             Assert.IsFalse(result.Success);
-            Assert.That(result.Error, Does.Contain($"port ('{input.BrokerPort}') must be less than or equal"));
+            Assert.That(result.Error!.Message, Does.Contain($"port ('{input.BrokerPort}') must be less than or equal"));
         }
 
         [Test]
@@ -109,8 +111,8 @@ namespace Frends.MQTT.Send.Tests
                 QoS = QoS.ExactlyOnce,
             };
 
-            var sendResultOne = await MQTT.Send(inputSendOne, CancellationToken.None);
-            var sendResultTwo = await MQTT.Send(inputSendTwo, CancellationToken.None);
+            var sendResultOne = await MQTT.Send(inputSendOne, DefaultOptions(), CancellationToken.None);
+            var sendResultTwo = await MQTT.Send(inputSendTwo, DefaultOptions(), CancellationToken.None);
             Assert.IsTrue(sendResultOne.Success);
             Assert.IsTrue(sendResultTwo.Success);
 
@@ -166,8 +168,8 @@ namespace Frends.MQTT.Send.Tests
                 QoS = QoS.AtLeastOnce,
             };
 
-            var sendResultOne = await MQTT.Send(inputSendOne, CancellationToken.None);
-            var sendResultTwo = await MQTT.Send(inputSendTwo, CancellationToken.None);
+            var sendResultOne = await MQTT.Send(inputSendOne, DefaultOptions(), CancellationToken.None);
+            var sendResultTwo = await MQTT.Send(inputSendTwo, DefaultOptions(), CancellationToken.None);
             Assert.IsTrue(sendResultOne.Success);
             Assert.IsTrue(sendResultTwo.Success);
 
