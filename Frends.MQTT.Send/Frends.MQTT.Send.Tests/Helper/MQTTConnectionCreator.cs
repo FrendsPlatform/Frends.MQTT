@@ -1,4 +1,5 @@
 ﻿namespace Frends.MQTT.Send.Tests.Helper;
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

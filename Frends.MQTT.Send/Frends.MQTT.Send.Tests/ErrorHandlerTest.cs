@@ -11,16 +11,6 @@ namespace Frends.MQTT.Send.Tests
     {
         private const string CustomErrorMessage = "CustomErrorMessage";
 
-        private static Input InvalidInput() => new Input
-        {
-            Host = "invalid_address",
-            BrokerPort = 1883,
-            Topic = "test/topic",
-            Message = "Test message",
-        };
-
-        private static Options DefaultOptions() => new Options { ThrowErrorOnFailure = true };
-
         [Test]
         public void Should_Throw_Error_When_ThrowErrorOnFailure_Is_True()
         {
@@ -49,5 +39,15 @@ namespace Frends.MQTT.Send.Tests
                 await MQTT.Send(InvalidInput(), options, CancellationToken.None));
             Assert.That(ex!.Message, Contains.Substring(CustomErrorMessage));
         }
+
+        private static Input InvalidInput() => new Input
+        {
+            Host = "invalid_address",
+            BrokerPort = 1883,
+            Topic = "test/topic",
+            Message = "Test message",
+        };
+
+        private static Options DefaultOptions() => new Options { ThrowErrorOnFailure = true };
     }
 }

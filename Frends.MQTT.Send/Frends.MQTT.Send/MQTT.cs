@@ -24,8 +24,7 @@ public static class MQTT
     {
         try
         {
-            var mqttSender = new MqttSender();
-            await mqttSender.Send(input, cancellationToken);
+            await MqttSender.Send(input, cancellationToken);
 
             return new Result(true, "Message sent.");
         }
