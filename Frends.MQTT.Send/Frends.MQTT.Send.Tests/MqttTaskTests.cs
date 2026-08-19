@@ -34,10 +34,10 @@ namespace Frends.MQTT.Send.Tests
                 Message = "Test message",
             };
 
-            var result = await MQTT.Send(input, CancellationToken.None);
+            var result = await MQTT.Send(input, DefaultOptions(), CancellationToken.None);
 
             Assert.IsFalse(result.Success);
-            Assert.That(result.Error, Does.Contain("Failed to send MQTT message"));
+            Assert.That(result.Error!.Message, Does.Contain("Failed to send MQTT message"));
         }
 
         /// <summary>
@@ -55,10 +55,10 @@ namespace Frends.MQTT.Send.Tests
                 Message = "Test message FRENDS",
             };
 
-            var result = await MQTT.Send(input, CancellationToken.None);
+            var result = await MQTT.Send(input, DefaultOptions(), CancellationToken.None);
 
             Assert.IsFalse(result.Success);
-            Assert.That(result.Error, Does.Contain($"port ('{input.BrokerPort}') must be less than or equal"));
+            Assert.That(result.Error!.Message, Does.Contain($"port ('{input.BrokerPort}') must be less than or equal"));
         }
 
         [Test]
@@ -78,10 +78,7 @@ namespace Frends.MQTT.Send.Tests
                 AllowInvalidCertificate = true,
             };
 
-            var connector = new MQTTConnectionCreator();
-            var subscribeResult = await connector.ConnectToBroker(inputRecieve, CancellationToken.None);
-
-            Assert.IsTrue(subscribeResult.Success);
+            await AssertBrokerConnectionEventuallySucceeds(inputRecieve);
 
             var inputSendOne = new Input
             {
@@ -109,11 +106,12 @@ namespace Frends.MQTT.Send.Tests
                 QoS = QoS.ExactlyOnce,
             };
 
-            var sendResultOne = await MQTT.Send(inputSendOne, CancellationToken.None);
-            var sendResultTwo = await MQTT.Send(inputSendTwo, CancellationToken.None);
+            var sendResultOne = await MQTT.Send(inputSendOne, DefaultOptions(), CancellationToken.None);
+            var sendResultTwo = await MQTT.Send(inputSendTwo, DefaultOptions(), CancellationToken.None);
             Assert.IsTrue(sendResultOne.Success);
             Assert.IsTrue(sendResultTwo.Success);
 
+            var connector = new MQTTConnectionCreator();
             var finalMessages = await connector.ConnectToBroker(inputRecieve, CancellationToken.None);
             Assert.AreEqual(2, finalMessages.MessagesList.Count);
         }
@@ -135,10 +133,7 @@ namespace Frends.MQTT.Send.Tests
                 AllowInvalidCertificate = true,
             };
 
-            var connector = new MQTTConnectionCreator();
-            var subscribeResult = await connector.ConnectToBroker(inputRecieve, CancellationToken.None);
-
-            Assert.IsTrue(subscribeResult.Success);
+            await AssertBrokerConnectionEventuallySucceeds(inputRecieve);
 
             var inputSendOne = new Input
             {
@@ -166,13 +161,36 @@ namespace Frends.MQTT.Send.Tests
                 QoS = QoS.AtLeastOnce,
             };
 
-            var sendResultOne = await MQTT.Send(inputSendOne, CancellationToken.None);
-            var sendResultTwo = await MQTT.Send(inputSendTwo, CancellationToken.None);
+            var sendResultOne = await MQTT.Send(inputSendOne, DefaultOptions(), CancellationToken.None);
+            var sendResultTwo = await MQTT.Send(inputSendTwo, DefaultOptions(), CancellationToken.None);
             Assert.IsTrue(sendResultOne.Success);
             Assert.IsTrue(sendResultTwo.Success);
 
+            var connector = new MQTTConnectionCreator();
             var finalMessages = await connector.ConnectToBroker(inputRecieve, CancellationToken.None);
             Assert.AreEqual(2, finalMessages.MessagesList.Count);
+        }
+
+        private static Options DefaultOptions() => new Options { ThrowErrorOnFailure = false };
+
+        private static async Task AssertBrokerConnectionEventuallySucceeds(InputReceive input)
+        {
+            for (var i = 0; i < 5; i++)
+            {
+                var connector = new MQTTConnectionCreator();
+                var subscribeResult = await connector.ConnectToBroker(input, CancellationToken.None);
+                if (subscribeResult.Success)
+                {
+                    return;
+                }
+
+                if (i < 4)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1));
+                }
+            }
+
+            Assert.Fail("MQTT broker connection did not succeed after retries.");
         }
     }
 }

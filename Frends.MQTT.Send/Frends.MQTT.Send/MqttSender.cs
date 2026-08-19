@@ -1,8 +1,9 @@
+namespace Frends.MQTT.Send;
+
 using System;
 using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
-using Frends.MQTT.Send;
 using Frends.MQTT.Send.Definitions;
 using MQTTnet;
 using MQTTnet.Protocol;
@@ -10,7 +11,7 @@ using MQTTnet.Protocol;
 /// <summary>
 /// Connect to a MQTT broker, publishes a message to a given topic, then disconnects.
 /// </summary>
-public class MqttSender
+public static class MqttSender
 {
     /// <summary>
     /// Method to connect to a MQTT broker, publishes a message to a given topic, then disconnects.
@@ -18,7 +19,7 @@ public class MqttSender
     /// <param name="input">MQTT publish connection options: broker address, port, topic to publish to, message content, TLS (y/n), QoS level, optional username and password, and option to allow invalid certificates.</param>
     /// <param name="cancellationToken">Cancellation token given by Frends.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public async Task Send(Input input, CancellationToken cancellationToken)
+    public static async Task Send(Input input, CancellationToken cancellationToken)
     {
         var factory = new MqttClientFactory();
         using var mqttClient = factory.CreateMqttClient();
@@ -40,15 +41,11 @@ public class MqttSender
                         {
                             return true;
                         }
-                        else
-                        {
-                            throw new InvalidCredentialException(o.SslPolicyErrors.ToString());
-                        }
+
+                        throw new InvalidCredentialException(o.SslPolicyErrors.ToString());
                     }
-                    else
-                    {
-                        return true;
-                    }
+
+                    return true;
                 });
 
             tlsOptions.WithSslProtocols(SslProtocols.Tls12);

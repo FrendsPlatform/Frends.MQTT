@@ -12,25 +12,25 @@
         /// The address of the MQTT broker.
         /// </summary>
         /// <example>broker_host</example>
-        required public string Host { get; set; }
+        public required string Host { get; set; }
 
         /// <summary>
         /// The port of the MQTT broker.
         /// </summary>
         /// <example>1883</example>
-        required public int BrokerPort { get; set; }
+        public required int BrokerPort { get; set; }
 
         /// <summary>
         /// The topic to publish the message to.
         /// </summary>
         /// <example>your_topic</example>
-        required public string Topic { get; set; }
+        public required string Topic { get; set; }
 
         /// <summary>
         /// The message to be published.
         /// </summary>
         /// <example>your_message</example>
-        required public string Message { get; set; }
+        public required string Message { get; set; }
 
         /// <summary>
         /// Whether to use TLS authentication

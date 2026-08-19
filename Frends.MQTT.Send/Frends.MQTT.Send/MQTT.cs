@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using Frends.MQTT.Send.Definitions;
+using Frends.MQTT.Send.Helpers;
 
 /// <summary>
 /// Main class of the Task to connect to a MQTT broker, publishes a message to a given topic, then disconnects.
@@ -16,20 +17,20 @@ public static class MQTT
     /// [Documentation](https://tasks.frends.com/tasks/frends-tasks/Frends.MQTT.Send).
     /// </summary>
     /// <param name="input">MQTT publish connection options: broker address, port, topic to publish to, message content, TLS (y/n), QoS level, optional username and password, and option to allow invalid certificates.</param>
+    /// <param name="options">Additional parameters to control error handling behaviour.</param>
     /// <param name="cancellationToken">Cancellation token given by Frends.</param>
-    /// <returns>Object { bool Success, string Data, string Error }</returns>
-    public static async Task<Result> Send([PropertyTab] Input input, CancellationToken cancellationToken)
+    /// <returns>Object { bool Success, string Data, Error Error }</returns>
+    public static async Task<Result> Send([PropertyTab] Input input, [PropertyTab] Options options, CancellationToken cancellationToken)
     {
         try
         {
-            var mqttSender = new MqttSender();
-            await mqttSender.Send(input, cancellationToken);
+            await MqttSender.Send(input, cancellationToken);
 
-            return new Result(true, "Message sent.", string.Empty);
+            return new Result(true, "Message sent.");
         }
         catch (Exception ex)
         {
-            return new Result(false, null, $"Error: {ex.Message}");
+            return ex.Handle(options);
         }
     }
 }

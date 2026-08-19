@@ -1,4 +1,5 @@
 ﻿namespace Frends.MQTT.Send;
+
 using System;
 
 /// <summary>
