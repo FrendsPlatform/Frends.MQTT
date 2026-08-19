@@ -35,7 +35,7 @@ internal class UnitTests
             Topic = "test/topic",
         };
 
-        var result = await MQTT.Receive(input, CancellationToken.None);
+        var result = await MQTT.Receive(input, new Options { ThrowErrorOnFailure = false }, CancellationToken.None);
 
         Assert.IsFalse(result.Success);
         Assert.That(result.Error, Does.Contain("Error while connecting host"));
@@ -55,7 +55,7 @@ internal class UnitTests
             Topic = "test/topic",
         };
 
-        var result = await MQTT.Receive(input, CancellationToken.None);
+        var result = await MQTT.Receive(input, new Options { ThrowErrorOnFailure = false }, CancellationToken.None);
 
         Assert.IsFalse(result.Success);
         Assert.That(result.Error, Does.Contain($"port ('{input.BrokerPort}') must be less than or equal"));
@@ -78,7 +78,7 @@ internal class UnitTests
             AllowInvalidCertificate = true,
         };
 
-        var subscribeResult = await MQTT.Receive(input, default);
+        var subscribeResult = await MQTT.Receive(input, new Options(), default);
         Assert.IsTrue(subscribeResult.Success);
 
         using var publisher = new MqttClientFactory().CreateMqttClient();
@@ -98,7 +98,7 @@ internal class UnitTests
                     .Build());
         }
 
-        var receivedMessages = await MQTT.Receive(input, default);
+        var receivedMessages = await MQTT.Receive(input, new Options(), default);
         Assert.IsTrue(receivedMessages.Success);
         Assert.AreEqual(6, receivedMessages.MessagesList.Count);
     }
@@ -120,7 +120,7 @@ internal class UnitTests
             AllowInvalidCertificate = true,
         };
 
-        var subscribeResult = await MQTT.Receive(input, default);
+        var subscribeResult = await MQTT.Receive(input, new Options(), default);
         Assert.IsTrue(subscribeResult.Success);
 
         using var publisher = new MqttClientFactory().CreateMqttClient();
@@ -150,7 +150,7 @@ internal class UnitTests
                     .Build());
         }
 
-        var finalMessages = await MQTT.Receive(input, default);
+        var finalMessages = await MQTT.Receive(input, new Options(), default);
         Assert.AreEqual(6, finalMessages.MessagesList.Count, "Missing messages. Check TLS handshake and broker logs.");
     }
 }
