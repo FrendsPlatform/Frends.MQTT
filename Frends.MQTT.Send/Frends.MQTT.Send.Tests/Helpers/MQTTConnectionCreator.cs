@@ -7,12 +7,14 @@ using MQTTnet;
 using MQTTnet.Protocol;
 using System;
 using System.Collections.Concurrent;
-using System.Linq;
+using Newtonsoft.Json.Linq;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 /// <summary>
 /// Helper class that connects to broker.
@@ -131,10 +133,12 @@ internal class MQTTConnectionCreator
             var message = new MqttMessage
             {
                 Payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload),
-                QoS = e.ApplicationMessage.QualityOfServiceLevel,
+                QoS = GetMqttQualityOfServiceLevel(e.ApplicationMessage.QualityOfServiceLevel),
                 Retain = e.ApplicationMessage.Retain,
                 ContentType = e.ApplicationMessage.ContentType,
-                UserProperties = e.ApplicationMessage.UserProperties?.ToDictionary(p => p.Name, p => p.Value),
+                UserProperties = e.ApplicationMessage.UserProperties is { Count: > 0 }
+                    ? JObject.FromObject(e.ApplicationMessage.UserProperties).ToString()
+                    : "{}",
                 ReceivedAt = DateTime.UtcNow,
             };
 
@@ -163,7 +167,7 @@ internal class MQTTConnectionCreator
         }
         catch (Exception ex)
         {
-            return new ResultReceive(success: false, clientID: clientID, $"Error while trying to connect to MQTT topic: {ex.Message} InnerException: {ex.InnerException.InnerException.Message}", messagesList: messagesList);
+            return new ResultReceive(success: false, clientID: clientID, $"Error while trying to connect to MQTT topic: {ex.Message} InnerException: {ex.InnerException?.InnerException?.Message}", messagesList: messagesList);
         }
 
         if (connectionResponse.ResultCode != MqttClientConnectResultCode.Success)
@@ -203,5 +207,20 @@ internal class MQTTConnectionCreator
         mqttClient.ApplicationMessageReceivedAsync -= handler;
 
         return result;
+    }
+
+    private QoS GetMqttQualityOfServiceLevel(MqttQualityOfServiceLevel qos)
+    {
+        switch (qos)
+        {
+            case MqttQualityOfServiceLevel.AtMostOnce:
+                return QoS.AtMostOnce;
+            case MqttQualityOfServiceLevel.AtLeastOnce:
+                return QoS.AtLeastOnce;
+            case MqttQualityOfServiceLevel.ExactlyOnce:
+                return QoS.ExactlyOnce;
+            default:
+                throw new Exception("Unsupported QoS Level.");
+        }
     }
 }

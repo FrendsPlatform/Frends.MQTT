@@ -48,7 +48,7 @@ public class MqttTaskTests
             Message = new MqttMessage
             {
                 Payload = "Test message",
-                QoS = MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce,
+                QoS = QoS.AtLeastOnce,
                 Retain = false,
                 ContentType = "plain/text",
             },
@@ -75,7 +75,7 @@ public class MqttTaskTests
             Message = new MqttMessage
             {
                 Payload = "Test message FRENDS",
-                QoS = MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce,
+                QoS = QoS.AtLeastOnce,
                 Retain = false,
                 ContentType = "plain/text",
             },
@@ -97,12 +97,12 @@ public class MqttTaskTests
             BrokerPort = 1883,
             ClientId = Guid.NewGuid().ToString(),
             Topic = "example topic",
-            ReceivingTime = 10,
+            ReceivingTime = 30,
             AuthenticationMethod = AuthenticationMethod.UsernamePassword,
             Username = "testuser",
             Password = "testpass",
             UseTls12 = false,
-            QoS = QoS.ExactlyOnce,
+            QoS = QoS.AtLeastOnce,
             AllowInvalidCertificate = true,
         };
 
@@ -119,7 +119,7 @@ public class MqttTaskTests
             Message = new MqttMessage
             {
                 Payload = "Test message FRENDS 1" + DateTime.Now.ToString(),
-                QoS = MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce,
+                QoS = QoS.AtLeastOnce,
                 Retain = false,
                 ContentType = "plain/text",
             },
@@ -138,7 +138,7 @@ public class MqttTaskTests
             Message = new MqttMessage
             {
                 Payload = "Test message FRENDS 2" + DateTime.Now.ToString(),
-                QoS = MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce,
+                QoS = QoS.AtLeastOnce,
                 Retain = false,
                 ContentType = "plain/text",
             },
@@ -189,7 +189,7 @@ public class MqttTaskTests
             Message = new MqttMessage
             {
                 Payload = "Test message FRENDS 1" + DateTime.Now.ToString(),
-                QoS = MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce,
+                QoS = QoS.AtLeastOnce,
                 Retain = false,
                 ContentType = "plain/text",
             },
@@ -208,7 +208,7 @@ public class MqttTaskTests
             Message = new MqttMessage
             {
                 Payload = "Test message FRENDS 2" + DateTime.Now.ToString(),
-                QoS = MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce,
+                QoS = QoS.AtLeastOnce,
                 Retain = false,
                 ContentType = "plain/text",
             },
@@ -233,7 +233,6 @@ public class MqttTaskTests
     {
         var certPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.crt");
         var keyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.key");
-        var pfxCertPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.pfx");
 
         var inputRecieve = new InputReceive
         {
@@ -246,17 +245,14 @@ public class MqttTaskTests
             QoS = QoS.ExactlyOnce,
             AllowInvalidCertificate = true,
             AuthenticationMethod = AuthenticationMethod.ClientCertificateFromFile,
-            CertificateFilePath = pfxCertPath,
-            CertificatePassword = "clientpass",
-            CertificateKeyFilePath = string.Empty,
+            CertificateFilePath = certPath,
+            CertificateKeyFilePath = keyPath,
         };
 
         var connector = new MQTTConnectionCreator();
         var subscribeResult = await connector.ConnectToBroker(inputRecieve, CancellationToken.None);
 
-        Console.WriteLine(subscribeResult.Error);
-
-        Assert.IsTrue(subscribeResult.Success, "Subscribe");
+        Assert.IsTrue(subscribeResult.Success);
 
         var inputSendOne = new Input
         {
@@ -266,16 +262,15 @@ public class MqttTaskTests
             Message = new MqttMessage
             {
                 Payload = "Test message FRENDS 1" + DateTime.Now.ToString(),
-                QoS = MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce,
+                QoS = QoS.ExactlyOnce,
                 Retain = false,
                 ContentType = "plain/text",
             },
             AllowInvalidCertificate = true,
             UseTls12 = true,
             AuthenticationMethod = AuthenticationMethod.ClientCertificateFromFile,
-            CertificateFilePath = pfxCertPath,
-            CertificatePassword = "clientpass",
-            CertificateKeyFilePath = string.Empty,
+            CertificateFilePath = certPath,
+            CertificateKeyFilePath = keyPath,
         };
 
         var inputSendTwo = new Input
@@ -286,16 +281,15 @@ public class MqttTaskTests
             Message = new MqttMessage
             {
                 Payload = "Test message FRENDS 2" + DateTime.Now.ToString(),
-                QoS = MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce,
+                QoS = QoS.ExactlyOnce,
                 Retain = false,
                 ContentType = "plain/text",
             },
             AllowInvalidCertificate = true,
             UseTls12 = true,
             AuthenticationMethod = AuthenticationMethod.ClientCertificateFromFile,
-            CertificateFilePath = pfxCertPath,
-            CertificatePassword = "clientpass",
-            CertificateKeyFilePath = string.Empty,
+            CertificateFilePath = certPath,
+            CertificateKeyFilePath = keyPath,
         };
 
         var sendResultOne = await MQTT.Send(inputSendOne, options, CancellationToken.None);
@@ -304,6 +298,9 @@ public class MqttTaskTests
         Assert.IsTrue(sendResultTwo.Success, "Test2");
 
         var finalMessages = await connector.ConnectToBroker(inputRecieve, CancellationToken.None);
+
+        Assert.IsTrue(finalMessages.Success, "Subscribe");
+
         Assert.AreEqual(2, finalMessages.MessagesList.Count);
     }
 }

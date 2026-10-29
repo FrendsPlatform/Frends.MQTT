@@ -5,6 +5,7 @@ using Frends.MQTT.Send.Enums;
 using Frends.MQTT.Send.Helpers;
 using MQTTnet;
 using MQTTnet.Protocol;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
@@ -121,11 +122,20 @@ public class MqttSender
             var mqttMessage = new MqttApplicationMessageBuilder()
                 .WithTopic(input.Topic)
                 .WithPayload(input.Message.Payload)
-                .WithQualityOfServiceLevel(input.Message.QoS)
+                .WithQualityOfServiceLevel(GetMqttQualityOfServiceLevel(input.Message.QoS))
                 .WithRetainFlag(input.Message.Retain);
 
             if (!string.IsNullOrEmpty(input.Message.CorrelationId))
                 mqttMessage.WithCorrelationData(Encoding.UTF8.GetBytes(input.Message.CorrelationId));
+            if (!string.IsNullOrEmpty(input.Message.UserProperties))
+            {
+                var userProperties = JObject.Parse(input.Message.UserProperties);
+                foreach (var prop in userProperties.Properties())
+                {
+                    if (prop.Value is not null)
+                        _ = mqttMessage.WithUserProperty(prop.Name, (string)prop.Value);
+                }
+            }
 
             await mqttClient.PublishAsync(mqttMessage.Build(), cancellationToken);
         }
@@ -147,5 +157,20 @@ public class MqttSender
             Success = true,
             Data = "Message sent.",
         };
+    }
+
+    private MqttQualityOfServiceLevel GetMqttQualityOfServiceLevel(QoS qos)
+    {
+        switch (qos)
+        {
+            case QoS.AtMostOnce:
+                return MqttQualityOfServiceLevel.AtMostOnce;
+            case QoS.AtLeastOnce:
+                return MqttQualityOfServiceLevel.AtLeastOnce;
+            case QoS.ExactlyOnce:
+                return MqttQualityOfServiceLevel.ExactlyOnce;
+            default:
+                throw new Exception("Unsupported QoS Level.");
+        }
     }
 }

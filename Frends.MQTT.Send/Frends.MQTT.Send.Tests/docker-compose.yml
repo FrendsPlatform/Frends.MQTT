@@ -1,9 +1,9 @@
 version: "3.9"
 
 services:
-  mqtt-setup:
+  mqtt-send-setup:
     image: alpine:latest
-    container_name: mqtt-setup
+    container_name: mqtt-send-setup
     volumes:
       - ./mosquitto/config:/output
     entrypoint: >
@@ -53,11 +53,11 @@ services:
       '
     restart: "no"
 
-  mqtt-broker:
+  mqtt-send-broker:
     image: eclipse-mosquitto
-    container_name: mqtt-broker
+    container_name: mqtt-send-broker
     depends_on:
-      mqtt-setup:
+      mqtt-send-setup:
         condition: service_completed_successfully
     ports:
       - "1883:1883" # Plain MQTT (username/password)

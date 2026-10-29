@@ -1,8 +1,10 @@
 ﻿namespace Frends.MQTT.Send.Definitions;
 
+using Frends.MQTT.Send.Enums;
+using MQTTnet.Protocol;
 using System;
 using System.Collections.Generic;
-using MQTTnet.Protocol;
+using System.ComponentModel.DataAnnotations;
 
 /// <summary>
 /// MqttMessage class.
@@ -18,8 +20,8 @@ public class MqttMessage
     /// <summary>
     /// The Quality of Service level used for message delivery.
     /// </summary>
-    /// <example>MqttQualityOfServiceLevel.AtLeastOnce</example>
-    public MqttQualityOfServiceLevel QoS { get; set; }
+    /// <example>QoS.AtLeastOnce</example>
+    public QoS QoS { get; set; }
 
     /// <summary>
     /// Indicates whether the broker stored the message as the retained message for the topic.
@@ -40,10 +42,11 @@ public class MqttMessage
     public string ContentType { get; set; }
 
     /// <summary>
-    /// Custom MQTT v5 user-defined key-value metadata attached to the message.
+    /// Custom MQTT v5 user-defined key-value metadata attached to the message in JSON format.
     /// </summary>
     /// <example>{ "DeviceId": "sensor-001", "Location": "Office" }</example>
-    public Dictionary<string, string> UserProperties { get; set; }
+    [DisplayFormat(DataFormatString = "Json")]
+    public string UserProperties { get; set; }
 
     /// <summary>
     /// The timestamp when the message was received by the application.
