@@ -127,9 +127,9 @@ internal class MQTTConnectionCreator
         {
             var message = new MqttMessage
             {
-                Payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload),
+                Payload = GetEncoding(taskOptions.PayloadEncoding, taskOptions.EnableBom, taskOptions.EncodingInString).GetString(e.ApplicationMessage.Payload),
                 Topic = e.ApplicationMessage.Topic,
-                QoS = e.ApplicationMessage.QualityOfServiceLevel,
+                QoS = GetMqttQualityOfServiceLevel(e.ApplicationMessage.QualityOfServiceLevel),
                 Retain = e.ApplicationMessage.Retain,
                 CorrelationId = e.ApplicationMessage.CorrelationData != null ? Encoding.UTF8.GetString(e.ApplicationMessage.CorrelationData) : string.Empty,
                 ContentType = e.ApplicationMessage.ContentType,
@@ -203,5 +203,43 @@ internal class MQTTConnectionCreator
         mqttClient.ApplicationMessageReceivedAsync -= handler;
 
         return result;
+    }
+
+    private static Encoding GetEncoding(PayloadEncoding optionsFileEncoding, bool optionsEnableBom, string optionsEncodingInString)
+    {
+        switch (optionsFileEncoding)
+        {
+            case PayloadEncoding.Other:
+                return Encoding.GetEncoding(optionsEncodingInString);
+            case PayloadEncoding.ASCII:
+                return Encoding.ASCII;
+            case PayloadEncoding.Default:
+                return Encoding.Default;
+            case PayloadEncoding.UTF8:
+                return optionsEnableBom ? new UTF8Encoding(true) : new UTF8Encoding(false);
+            case PayloadEncoding.Unicode:
+                return Encoding.Unicode;
+            case PayloadEncoding.Windows1252:
+                EncodingProvider provider = CodePagesEncodingProvider.Instance;
+                Encoding.RegisterProvider(provider);
+                return Encoding.GetEncoding(1252);
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+    }
+
+    private QoS GetMqttQualityOfServiceLevel(MqttQualityOfServiceLevel qos)
+    {
+        switch (qos)
+        {
+            case MqttQualityOfServiceLevel.AtMostOnce:
+                return QoS.AtMostOnce;
+            case MqttQualityOfServiceLevel.AtLeastOnce:
+                return QoS.AtLeastOnce;
+            case MqttQualityOfServiceLevel.ExactlyOnce:
+                return QoS.ExactlyOnce;
+            default:
+                throw new Exception("Unsupported QoS Level.");
+        }
     }
 }

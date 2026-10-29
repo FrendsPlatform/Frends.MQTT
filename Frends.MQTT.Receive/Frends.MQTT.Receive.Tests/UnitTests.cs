@@ -33,6 +33,8 @@ internal class UnitTests
         {
             ErrorMessageOnFailure = string.Empty,
             ThrowErrorOnFailure = false,
+            PayloadEncoding = PayloadEncoding.UTF8,
+            EnableBom = false,
         };
     }
 

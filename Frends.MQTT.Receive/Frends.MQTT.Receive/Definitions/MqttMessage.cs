@@ -2,7 +2,7 @@
 
 using System;
 using System.Collections.Generic;
-using MQTTnet.Protocol;
+using Frends.MQTT.Receive.Enums;
 
 /// <summary>
 /// MqttMessage class.
@@ -25,7 +25,7 @@ public class MqttMessage
     /// The Quality of Service level used for message delivery.
     /// </summary>
     /// <example>MqttQualityOfServiceLevel.AtLeastOnce</example>
-    public MqttQualityOfServiceLevel QoS { get; set; }
+    public QoS QoS { get; set; }
 
     /// <summary>
     /// Indicates whether the broker stored the message as the retained message for the topic.
