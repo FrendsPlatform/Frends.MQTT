@@ -16,16 +16,15 @@ using System.Threading.Tasks;
 /// <summary>
 /// Connect to a MQTT broker, publishes a message to a given topic, then disconnects.
 /// </summary>
-public class MqttSender
+public static class MqttSender
 {
     /// <summary>
     /// Method to connect to a MQTT broker, publishes a message to a given topic, then disconnects.
     /// </summary>
     /// <param name="input">MQTT publish connection options: broker address, port, topic to publish to, message content, TLS (y/n), QoS level, optional username and password, and option to allow invalid certificates.</param>
-    /// <param name="options">Additional options</param>
     /// <param name="cancellationToken">Cancellation token given by Frends.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public async Task<Result> Send(Input input, Options options, CancellationToken cancellationToken)
+    public static async Task<Result> Send(Input input, CancellationToken cancellationToken)
     {
         var factory = new MqttClientFactory();
         using var mqttClient = factory.CreateMqttClient();
@@ -119,21 +118,35 @@ public class MqttSender
         {
             await mqttClient.ConnectAsync(mqttOptions.Build(), cancellationToken);
 
-            var mqttMessage = new MqttApplicationMessageBuilder()
-                .WithTopic(input.Topic)
-                .WithPayload(input.Message.Payload)
+            MqttApplicationMessageBuilder mqttMessage = new MqttApplicationMessageBuilder()
+                .WithTopic(input.Message.Topic)
                 .WithQualityOfServiceLevel(GetMqttQualityOfServiceLevel(input.Message.QoS))
                 .WithRetainFlag(input.Message.Retain);
 
+            if (input.Message.PayloadType == PayloadType.Binary)
+                mqttMessage.WithPayload(input.Message.Payload as byte[]);
+            else
+                mqttMessage.WithPayload(input.Message.Payload as string);
+
+            if (!string.IsNullOrEmpty(input.Message.ResponseTopic))
+                mqttMessage.WithResponseTopic(input.Message.ResponseTopic);
+
             if (!string.IsNullOrEmpty(input.Message.CorrelationId))
                 mqttMessage.WithCorrelationData(Encoding.UTF8.GetBytes(input.Message.CorrelationId));
+
+            if (!string.IsNullOrEmpty(input.Message.ContentType))
+                mqttMessage.WithContentType(input.Message.ContentType);
+
             if (!string.IsNullOrEmpty(input.Message.UserProperties))
             {
                 var userProperties = JObject.Parse(input.Message.UserProperties);
+
                 foreach (var prop in userProperties.Properties())
                 {
-                    if (prop.Value is not null)
-                        _ = mqttMessage.WithUserProperty(prop.Name, (string)prop.Value);
+                    var value = (string?)prop.Value;
+
+                    if (value is not null)
+                        _ = mqttMessage.WithUserProperty(prop.Name, value);
                 }
             }
 
@@ -141,25 +154,21 @@ public class MqttSender
         }
         catch (OperationCanceledException ex)
         {
-            return new MqttSenderException("MQTT operation was canceled", ex).Handle(options);
+            throw new MqttSenderException("MQTT operation was canceled", ex);
         }
         catch (Exception ex)
         {
-            return new MqttSenderException("Failed to send MQTT message", ex).Handle(options);
+            throw new MqttSenderException("Failed to send MQTT message", ex);
         }
         finally
         {
             await mqttClient.DisconnectAsync(new MqttClientDisconnectOptions(), cancellationToken);
         }
 
-        return new Result
-        {
-            Success = true,
-            Data = "Message sent.",
-        };
+        return new Result(true, data: "Message sent.");
     }
 
-    private MqttQualityOfServiceLevel GetMqttQualityOfServiceLevel(QoS qos)
+    private static MqttQualityOfServiceLevel GetMqttQualityOfServiceLevel(QoS qos)
     {
         switch (qos)
         {

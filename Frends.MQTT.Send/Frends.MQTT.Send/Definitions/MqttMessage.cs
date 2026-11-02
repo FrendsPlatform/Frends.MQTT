@@ -1,10 +1,8 @@
 ﻿namespace Frends.MQTT.Send.Definitions;
 
-using Frends.MQTT.Send.Enums;
-using MQTTnet.Protocol;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Frends.MQTT.Send.Enums;
 
 /// <summary>
 /// MqttMessage class.
@@ -12,10 +10,28 @@ using System.ComponentModel.DataAnnotations;
 public class MqttMessage
 {
     /// <summary>
-    /// The message content received from the MQTT broker.
+    /// The topic to publish the message to.
+    /// </summary>
+    /// <example>your_topic</example>
+    required public string Topic { get; set; }
+
+    /// <summary>
+    /// The topic to response the message to.
+    /// </summary>
+    /// <example>your_topic</example>
+    public string? ResponseTopic { get; set; }
+
+    /// <summary>
+    /// Determines tyhe type of the payload.
+    /// </summary>
+    /// <example>PayloadType.String</example>
+    public PayloadType PayloadType { get; set; }
+
+    /// <summary>
+    /// The message content in byte[] or string format to be send to the MQTT broker.
     /// </summary>
     /// <example>{"temperature":22.5,"humidity":45}</example>
-    public string Payload { get; set; }
+    required public dynamic Payload { get; set; }
 
     /// <summary>
     /// The Quality of Service level used for message delivery.
@@ -33,20 +49,20 @@ public class MqttMessage
     /// Correlation Id of the message. Can be left empty if it's not used.
     /// </summary>
     /// <example>3f29a1c4-9e2b-4d11-8a77-1b6e4f9c2d90</example>
-    public string CorrelationId { get; set; }
+    public string? CorrelationId { get; set; }
 
     /// <summary>
     /// The MIME type or format of the payload.
     /// </summary>
     /// <example>application/json</example>
-    public string ContentType { get; set; }
+    public string? ContentType { get; set; }
 
     /// <summary>
     /// Custom MQTT v5 user-defined key-value metadata attached to the message in JSON format.
     /// </summary>
     /// <example>{ "DeviceId": "sensor-001", "Location": "Office" }</example>
     [DisplayFormat(DataFormatString = "Json")]
-    public string UserProperties { get; set; }
+    public string? UserProperties { get; set; }
 
     /// <summary>
     /// The timestamp when the message was received by the application.

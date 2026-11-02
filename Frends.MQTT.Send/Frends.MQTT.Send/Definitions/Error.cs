@@ -3,19 +3,19 @@
 using System;
 
 /// <summary>
-/// Error that occurred during the task.
+/// Error details for a failed Task result.
 /// </summary>
 public class Error
 {
     /// <summary>
-    /// Summary of the error.
+    /// Human-readable error message.
     /// </summary>
-    /// <example>Unable to join strings.</example>
-    public string Message { get; set; }
+    /// <example>Failed to publish MQTT message to broker</example>
+    public string Message { get; set; } = string.Empty;
 
     /// <summary>
-    /// Additional information about the error.
+    /// The exception that caused the failure.
     /// </summary>
-    /// <example>object { Exception AdditionalInfo }</example>
-    public Exception AdditionalInfo { get; set; }
+    /// <example>ValidationException</example>
+    public Exception? AdditionalInfo { get; set; }
 }

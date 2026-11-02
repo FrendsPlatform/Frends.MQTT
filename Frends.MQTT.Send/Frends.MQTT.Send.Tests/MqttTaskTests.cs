@@ -7,6 +7,7 @@ using Frends.MQTT.Send.Tests.Helpers;
 using NUnit.Framework;
 using System;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -47,6 +48,7 @@ public class MqttTaskTests
             Topic = "test/topic",
             Message = new MqttMessage
             {
+                PayloadType = PayloadType.String,
                 Payload = "Test message",
                 QoS = QoS.AtLeastOnce,
                 Retain = false,
@@ -74,6 +76,7 @@ public class MqttTaskTests
             Topic = "test/topic",
             Message = new MqttMessage
             {
+                PayloadType = PayloadType.String,
                 Payload = "Test message FRENDS",
                 QoS = QoS.AtLeastOnce,
                 Retain = false,
@@ -118,6 +121,7 @@ public class MqttTaskTests
             Topic = "example topic",
             Message = new MqttMessage
             {
+                PayloadType = PayloadType.String,
                 Payload = "Test message FRENDS 1" + DateTime.Now.ToString(),
                 QoS = QoS.AtLeastOnce,
                 Retain = false,
@@ -137,6 +141,7 @@ public class MqttTaskTests
             Topic = "example topic",
             Message = new MqttMessage
             {
+                PayloadType = PayloadType.String,
                 Payload = "Test message FRENDS 2" + DateTime.Now.ToString(),
                 QoS = QoS.AtLeastOnce,
                 Retain = false,
@@ -149,13 +154,36 @@ public class MqttTaskTests
             Password = "testpass",
         };
 
+        var inputSendBinary = new Input
+        {
+            Host = "localhost",
+            BrokerPort = 1883,
+            Topic = "example topic",
+            Message = new MqttMessage
+            {
+                PayloadType = PayloadType.Binary,
+                Payload = Encoding.UTF8.GetBytes("Test message FRENDS 2" + DateTime.Now.ToString()),
+                QoS = QoS.AtLeastOnce,
+                Retain = false,
+                ContentType = "plain/text",
+            },
+            AllowInvalidCertificate = true,
+            AuthenticationMethod = AuthenticationMethod.UsernamePassword,
+            UseTls12 = false,
+            Username = "testuser",
+            Password = "testpass",
+        };
+
         var sendResultOne = await MQTT.Send(inputSendOne, options, CancellationToken.None);
-        var sendResultTwo = await MQTT.Send(inputSendTwo, options, CancellationToken.None);
         Assert.IsTrue(sendResultOne.Success);
+        var sendResultTwo = await MQTT.Send(inputSendTwo, options, CancellationToken.None);
         Assert.IsTrue(sendResultTwo.Success);
 
+        var sendResultBinary = await MQTT.Send(inputSendBinary, options, CancellationToken.None);
+        Assert.IsTrue(sendResultBinary.Success);
+
         var finalMessages = await connector.ConnectToBroker(inputRecieve, CancellationToken.None);
-        Assert.AreEqual(2, finalMessages.MessagesList.Count);
+        Assert.AreEqual(3, finalMessages.MessagesList.Count);
     }
 
     [Test]
@@ -188,6 +216,7 @@ public class MqttTaskTests
             Topic = "example topic",
             Message = new MqttMessage
             {
+                PayloadType = PayloadType.String,
                 Payload = "Test message FRENDS 1" + DateTime.Now.ToString(),
                 QoS = QoS.AtLeastOnce,
                 Retain = false,
@@ -207,6 +236,7 @@ public class MqttTaskTests
             Topic = "example topic",
             Message = new MqttMessage
             {
+                PayloadType = PayloadType.String,
                 Payload = "Test message FRENDS 2" + DateTime.Now.ToString(),
                 QoS = QoS.AtLeastOnce,
                 Retain = false,
@@ -261,6 +291,7 @@ public class MqttTaskTests
             Topic = "example topic",
             Message = new MqttMessage
             {
+                PayloadType = PayloadType.String,
                 Payload = "Test message FRENDS 1" + DateTime.Now.ToString(),
                 QoS = QoS.ExactlyOnce,
                 Retain = false,
@@ -280,6 +311,7 @@ public class MqttTaskTests
             Topic = "example topic",
             Message = new MqttMessage
             {
+                PayloadType = PayloadType.String,
                 Payload = "Test message FRENDS 2" + DateTime.Now.ToString(),
                 QoS = QoS.ExactlyOnce,
                 Retain = false,

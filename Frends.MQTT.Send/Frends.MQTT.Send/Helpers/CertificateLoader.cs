@@ -65,7 +65,7 @@ internal static class CertificateLoader
     /// The password used to open a PFX/P12 certificate file, if required.
     /// </param>
     /// <returns>The loaded certificate.</returns>
-    internal static X509Certificate2 LoadFromFile(string certificateFilePath, string keyFilePath = null, string password = null)
+    internal static X509Certificate2 LoadFromFile(string certificateFilePath, string? keyFilePath = "", string? password = "")
     {
         if (!File.Exists(certificateFilePath))
             throw new FileNotFoundException("Certificate file not found.", certificateFilePath);
@@ -94,7 +94,7 @@ internal static class CertificateLoader
     /// The password used to open the certificate, if required.
     /// </param>
     /// <returns>The loaded certificate.</returns>
-    internal static X509Certificate2 LoadFromBase64(string base64, string password = null)
+    internal static X509Certificate2 LoadFromBase64(string base64, string? password = "")
     {
         if (string.IsNullOrWhiteSpace(base64))
             throw new ArgumentException("Base64 certificate string cannot be empty.");
@@ -109,7 +109,7 @@ internal static class CertificateLoader
         return cert;
     }
 
-    private static X509Certificate2 LoadFromPfx(string path, string password)
+    private static X509Certificate2 LoadFromPfx(string path, string? password)
     {
         var cert = new X509Certificate2(
             path,
@@ -122,7 +122,7 @@ internal static class CertificateLoader
         return cert;
     }
 
-    private static X509Certificate2 LoadFromPem(string certPath, string keyPath)
+    private static X509Certificate2 LoadFromPem(string certPath, string? keyPath)
     {
         if (string.IsNullOrEmpty(keyPath))
             throw new ArgumentException("Private key file path is required for PEM certificates.");
@@ -135,7 +135,7 @@ internal static class CertificateLoader
         using var ephemeral = X509Certificate2.CreateFromPemFile(certPath, keyPath);
         var pfxBytes = ephemeral.Export(X509ContentType.Pfx);
 
-        var cert = new X509Certificate2(pfxBytes, (string)null, GetKeyStorageFlags());
+        var cert = new X509Certificate2(pfxBytes, string.Empty, keyStorageFlags: GetKeyStorageFlags());
 
         if (!cert.HasPrivateKey)
             throw new InvalidCredentialException("The PEM certificate or key is invalid or missing the private key.");

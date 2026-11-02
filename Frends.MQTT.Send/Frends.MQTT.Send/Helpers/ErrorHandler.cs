@@ -1,15 +1,18 @@
-﻿namespace Frends.MQTT.Send.Helpers;
+namespace Frends.MQTT.Send.Helpers;
 
-using Frends.MQTT.Send.Definitions;
 using System;
+using Frends.MQTT.Send.Definitions;
 
+/// <summary>
+/// Converts an exception into a failed Result object or rethrows based on task options.
+/// </summary>
 internal static class ErrorHandler
 {
     /// <summary>
-    /// Converts an exception into a failed Result object or rethrows based on task options.
+    /// Handles an exception by either rethrowing it or returning a failed Result based on task options.
     /// </summary>
     /// <param name="exception">The exception to handle.</param>
-    /// <param name="options"> Task options that control whether failures are returned as a Result object or thrown. </param>
+    /// <param name="options">Task options that control whether failures are returned as a Result object or thrown.</param>
     /// <param name="throwCanceled">
     /// When true, an OperationCanceledException is rethrown immediately.
     /// When false, cancellation is handled like any other failure.
@@ -28,7 +31,7 @@ internal static class ErrorHandler
         if (throwCanceled && exception is OperationCanceledException) throw exception;
     }
 
-    private static void ThrowBaseException(Exception exception, string customMessage = null)
+    private static void ThrowBaseException(Exception exception, string customMessage = "")
     {
         if (string.IsNullOrEmpty(customMessage))
             throw new Exception(exception.Message, exception);
@@ -36,21 +39,18 @@ internal static class ErrorHandler
         throw new Exception(customMessage, exception);
     }
 
-    private static Result ReturnResult(Exception exception, string customMessage = null)
+    private static Result ReturnResult(Exception exception, string customMessage = "")
     {
         var errorMessage = string.IsNullOrEmpty(customMessage)
             ? exception.Message
             : $"{customMessage}: {exception.Message}";
 
-        return new Result
-        {
-            Success = false,
-            Data = string.Empty,
-            Error = new Error
+        return new Result(
+            false,
+            error: new Error
             {
                 Message = errorMessage,
                 AdditionalInfo = exception,
-            },
-        };
+            });
     }
 }

@@ -1,21 +1,24 @@
-﻿namespace Frends.MQTT.Receive.Helpers;
+namespace Frends.MQTT.Receive.Helpers;
 
-using Frends.MQTT.Receive.Definitions;
 using System;
 using System.Collections.Concurrent;
+using Frends.MQTT.Receive.Definitions;
 
+/// <summary>
+/// Converts an exception into a failed Result object or rethrows based on task options.
+/// </summary>
 internal static class ErrorHandler
 {
     /// <summary>
-    /// Converts an exception into a failed Result object or rethrows based on task options.
+    /// Handles an exception by either rethrowing it or returning a failed Result, based on task options.
     /// </summary>
     /// <param name="exception">The exception to handle.</param>
-    /// <param name="options"> Task options that control whether failures are returned as a Result object or thrown. </param>
+    /// <param name="options">Task options that control whether failures are returned as a Result object or thrown.</param>
     /// <param name="throwCanceled">
     /// When true, an OperationCanceledException is rethrown immediately.
     /// When false, cancellation is handled like any other failure.
     /// </param>
-    /// <returns> A failed Result object when the exception is handled instead of rethrown. </returns>
+    /// <returns>A failed Result object when the exception is handled instead of rethrown.</returns>
     internal static Result Handle(this Exception exception, Options options, bool throwCanceled = true)
     {
         ThrowIfCanceled(exception, throwCanceled);

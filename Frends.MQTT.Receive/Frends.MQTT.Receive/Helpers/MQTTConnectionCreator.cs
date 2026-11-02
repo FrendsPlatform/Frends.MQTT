@@ -184,11 +184,11 @@ internal class MQTTConnectionCreator
         }
         catch (OperationCanceledException cException)
         {
-            return new Exception($"Error while trying to subscribe to MQTT topic: {cException.Message}").Handle(taskOptions);
+            throw new Exception($"Error while trying to subscribe to MQTT topic: {cException.Message}");
         }
         catch (Exception e)
         {
-            return new Exception($"Error while trying to subscribe to MQTT topic: {e.Message} {disconnectInfo ?? string.Empty}").Handle(taskOptions);
+            throw new Exception($"Error while trying to subscribe to MQTT topic: {e.Message} {disconnectInfo ?? string.Empty}");
         }
 
         await Task.Delay(taskInput.ReceivingTime * 1000, cancellationToken);

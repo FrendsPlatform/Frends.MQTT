@@ -1,4 +1,4 @@
-﻿namespace Frends.MQTT.Send.Definitions;
+namespace Frends.MQTT.Send.Definitions;
 
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -18,7 +18,7 @@ public class Options
     /// <summary>
     /// Overrides the error message on failure.
     /// </summary>
-    /// <example>Custom error message</example>
+    /// <example>Failed to publish MQTT message to broker</example>
     [DisplayFormat(DataFormatString = "Text")]
     [DefaultValue("")]
     public string ErrorMessageOnFailure { get; set; } = string.Empty;
