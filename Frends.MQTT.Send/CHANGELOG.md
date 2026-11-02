@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.1.0] - 2026-10-29
+## [2.1.0] - 2026-11-02
 ### Added
 - Support for client certificate authentication.
 

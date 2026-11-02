@@ -35,7 +35,6 @@ services:
             -CA /output/ca.crt -CAkey /output/ca.key -CAcreateserial \
             -out /output/client.crt -days 365
 
-<<<<<<< HEAD
         echo "Generating client PFX compatible with Windows .NET..."
         openssl pkcs12 -export \
             -out /output/client.pfx \
@@ -49,14 +48,9 @@ services:
         mosquitto_passwd -b /output/passwd testuser testpass
 
         echo "Fixing permissions..."
-        chmod 644 /output/*.crt /output/*.key
-        chmod 600 /output/server.key /output/ca.key /output/passwd
-=======
-      echo "Fixing permissions..."
-      chmod 644 /output/*.crt
-      chmod 644 /output/server.key /output/passwd
-      chmod 600 /output/ca.key
->>>>>>> 1c0cfb68ccc22e41fb9a8e5e02420df6c68a0e48
+        chmod 644 /output/*.crt
+        chmod 644 /output/server.key /output/passwd
+        chmod 600 /output/ca.key
       '
     restart: "no"
 

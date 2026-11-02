@@ -8,7 +8,7 @@ using Frends.MQTT.Send.Definitions;
 using Frends.MQTT.Send.Helpers;
 
 /// <summary>
-/// Main class of the Task to connect to a MQTT broker, publishes a message to a given topic, then disconnects.
+/// Main class of the Task to connect to a MQTT broker, publish a message to a given topic, then disconnects.
 /// </summary>
 public static class MQTT
 {
