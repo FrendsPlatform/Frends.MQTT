@@ -13,3 +13,4 @@
 [assembly: SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1629:Documentation text should end with a period", Justification = "Following Frends guidelines", Scope = "namespaceanddescendants", Target = "~N:Frends.MQTT.Send.Definitions")]
 [assembly: SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1124:Do not use regions", Justification = "Following Frends guidelines", Scope = "namespaceanddescendants", Target = "~N:Frends.MQTT.Send")]
 [assembly: SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1101:Prefix local calls with this", Justification = "Following Frends guidelines", Scope = "namespaceanddescendants", Target = "~N:Frends.MQTT.Send")]
+[assembly: SuppressMessage("StyleCop.CSharp.LayoutRules", "SA1503:Braces should not be omitted", Justification = "Following Frends guidelines", Scope = "namespaceanddescendants", Target = "~N:Frends.MQTT.Send")]

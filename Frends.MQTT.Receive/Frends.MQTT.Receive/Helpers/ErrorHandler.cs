@@ -1,6 +1,7 @@
 namespace Frends.MQTT.Receive.Helpers;
 
 using System;
+using System.Collections.Concurrent;
 using Frends.MQTT.Receive.Definitions;
 
 /// <summary>
@@ -45,10 +46,16 @@ internal static class ErrorHandler
             ? exception.Message
             : $"{customMessage}: {exception.Message}";
 
-        return new Result(
-            success: false,
-            clientID: null,
-            error: errorMessage,
-            messagesList: null);
+        return new Result
+        {
+            Success = false,
+            MessagesList = new ConcurrentQueue<MqttMessage>(),
+            CurrentClientId = string.Empty,
+            Error = new Error
+            {
+                Message = errorMessage,
+                AdditionalInfo = exception,
+            },
+        };
     }
 }

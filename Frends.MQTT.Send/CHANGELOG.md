@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.1.0] - 2026-11-02
+### Added
+- Support for client certificate authentication.
+
 ## [2.0.0] - 2026-08-17
 ### Added
 - [Breaking Change] Change Error type in response from string to custom error object

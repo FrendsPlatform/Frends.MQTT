@@ -1,0 +1,185 @@
+namespace Frends.MQTT.Send;
+
+using Frends.MQTT.Send.Definitions;
+using Frends.MQTT.Send.Enums;
+using Frends.MQTT.Send.Helpers;
+using MQTTnet;
+using MQTTnet.Protocol;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+/// <summary>
+/// Connect to a MQTT broker, publishes a message to a given topic, then disconnects.
+/// </summary>
+public static class MqttSender
+{
+    /// <summary>
+    /// Method to connect to a MQTT broker, publishes a message to a given topic, then disconnects.
+    /// </summary>
+    /// <param name="input">MQTT publish connection options: broker address, port, topic to publish to, message content, TLS (y/n), QoS level, optional username and password, and option to allow invalid certificates.</param>
+    /// <param name="cancellationToken">Cancellation token given by Frends.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    public static async Task<Result> Send(Input input, CancellationToken cancellationToken)
+    {
+        var factory = new MqttClientFactory();
+        using var mqttClient = factory.CreateMqttClient();
+
+        var mqttOptions = new MqttClientOptionsBuilder()
+            .WithTcpServer(input.Host, input.BrokerPort)
+            .WithCleanSession();
+
+        bool isCertificateAuth = input.AuthenticationMethod is AuthenticationMethod.ClientCertificateFromStore
+            or AuthenticationMethod.ClientCertificateFromFile
+            or AuthenticationMethod.ClientCertificateFromBase64String;
+
+        if (input.UseTls12)
+        {
+            var tlsOptions = new MqttClientTlsOptionsBuilder().WithCertificateValidationHandler(
+                    o =>
+                    {
+                        if (o.SslPolicyErrors != System.Net.Security.SslPolicyErrors.None)
+                        {
+                            if (input.AllowInvalidCertificate)
+                                return true;
+                            else
+                                throw new InvalidCredentialException(o.SslPolicyErrors.ToString());
+                        }
+                        else
+                        {
+                            return true;
+                        }
+                    });
+
+            tlsOptions.WithSslProtocols(SslProtocols.Tls12);
+
+            if (isCertificateAuth)
+            {
+                var certificates = input.AuthenticationMethod switch
+                {
+                    AuthenticationMethod.ClientCertificateFromStore =>
+                        new[]
+                        {
+                            CertificateLoader.LoadFromStore(
+                                input.CertificateThumbprint
+                                    ?? throw new ArgumentException("CertificateThumbprint cannot be empty when CertificateStore is selected."),
+                                StoreName.My,
+                                input.CertificateStoreLocation is CertificateStoreLocation.LocalMachine ? StoreLocation.LocalMachine : StoreLocation.CurrentUser),
+                        },
+
+                    AuthenticationMethod.ClientCertificateFromFile =>
+                        new[]
+                        {
+                            CertificateLoader.LoadFromFile(
+                                input.CertificateFilePath
+                                    ?? throw new ArgumentException("File path is required for CertificateSource.File authentication."),
+                                input.CertificateKeyFilePath,
+                                input.CertificatePassword),
+                        },
+
+                    AuthenticationMethod.ClientCertificateFromBase64String =>
+                        new[]
+                        {
+                            CertificateLoader.LoadFromBase64(
+                                input.CertificateBase64String
+                                    ?? throw new ArgumentException("Base64 certificate string is required for CertificateSource.String authentication."),
+                                input.CertificatePassword),
+                        },
+
+                    _ => throw new NotSupportedException($"Unsupported Authentication method: {input.AuthenticationMethod}")
+                };
+
+                tlsOptions.WithClientCertificates(certificates);
+            }
+
+            mqttOptions.WithTlsOptions(tlsOptions.Build());
+        }
+
+        switch (input.AuthenticationMethod)
+        {
+            case AuthenticationMethod.ClientCertificateFromFile:
+            case AuthenticationMethod.ClientCertificateFromStore:
+            case AuthenticationMethod.ClientCertificateFromBase64String:
+                if (!string.IsNullOrEmpty(input.ClientAuthenticationName))
+                    mqttOptions.WithCredentials(input.ClientAuthenticationName, "placeholder");
+                break;
+
+            case AuthenticationMethod.UsernamePassword:
+                if (!string.IsNullOrEmpty(input.Username) && !string.IsNullOrEmpty(input.Password))
+                    mqttOptions.WithCredentials(input.Username, input.Password);
+                break;
+        }
+
+        try
+        {
+            await mqttClient.ConnectAsync(mqttOptions.Build(), cancellationToken);
+
+            MqttApplicationMessageBuilder mqttMessage = new MqttApplicationMessageBuilder()
+                .WithTopic(input.Message.Topic)
+                .WithQualityOfServiceLevel(GetMqttQualityOfServiceLevel(input.Message.QoS))
+                .WithRetainFlag(input.Message.Retain);
+
+            if (input.Message.PayloadType == PayloadType.Binary)
+                mqttMessage.WithPayload(input.Message.Payload as byte[]);
+            else
+                mqttMessage.WithPayload(input.Message.Payload as string);
+
+            if (!string.IsNullOrEmpty(input.Message.ResponseTopic))
+                mqttMessage.WithResponseTopic(input.Message.ResponseTopic);
+
+            if (!string.IsNullOrEmpty(input.Message.CorrelationId))
+                mqttMessage.WithCorrelationData(Encoding.UTF8.GetBytes(input.Message.CorrelationId));
+
+            if (!string.IsNullOrEmpty(input.Message.ContentType))
+                mqttMessage.WithContentType(input.Message.ContentType);
+
+            if (!string.IsNullOrEmpty(input.Message.UserProperties))
+            {
+                var userProperties = JObject.Parse(input.Message.UserProperties);
+
+                foreach (var prop in userProperties.Properties())
+                {
+                    var value = (string?)prop.Value;
+
+                    if (value is not null)
+                        _ = mqttMessage.WithUserProperty(prop.Name, value);
+                }
+            }
+
+            await mqttClient.PublishAsync(mqttMessage.Build(), cancellationToken);
+        }
+        catch (OperationCanceledException ex)
+        {
+            throw new MqttSenderException("MQTT operation was canceled", ex);
+        }
+        catch (Exception ex)
+        {
+            throw new MqttSenderException("Failed to send MQTT message", ex);
+        }
+        finally
+        {
+            await mqttClient.DisconnectAsync(new MqttClientDisconnectOptions(), cancellationToken);
+        }
+
+        return new Result(true, data: "Message sent.");
+    }
+
+    private static MqttQualityOfServiceLevel GetMqttQualityOfServiceLevel(QoS qos)
+    {
+        switch (qos)
+        {
+            case QoS.AtMostOnce:
+                return MqttQualityOfServiceLevel.AtMostOnce;
+            case QoS.AtLeastOnce:
+                return MqttQualityOfServiceLevel.AtLeastOnce;
+            case QoS.ExactlyOnce:
+                return MqttQualityOfServiceLevel.ExactlyOnce;
+            default:
+                throw new Exception("Unsupported QoS Level.");
+        }
+    }
+}

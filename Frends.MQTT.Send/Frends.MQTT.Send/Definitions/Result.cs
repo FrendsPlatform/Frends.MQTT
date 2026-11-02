@@ -22,7 +22,7 @@ public class Result
     /// Whether connection to the MQTT broker was successful or not.
     /// </summary>
     /// <example>true</example>
-    public bool Success { get; private set; }
+    public bool Success { get; set; }
 
     /// <summary>
     /// Returns a confirmation message on success.
