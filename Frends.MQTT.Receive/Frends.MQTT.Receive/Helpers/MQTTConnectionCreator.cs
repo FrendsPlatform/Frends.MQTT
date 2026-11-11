@@ -125,10 +125,15 @@ internal class MQTTConnectionCreator
 
         var handler = (Func<MqttApplicationMessageReceivedEventArgs, Task>)(e =>
         {
+            dynamic payload = taskInput.PayloadType == PayloadType.String
+                ? GetEncoding(taskOptions.PayloadEncoding, taskOptions.EnableBom, taskOptions.EncodingInString).GetString(e.ApplicationMessage.Payload)
+                : e.ApplicationMessage.Payload;
+
             var message = new MqttMessage
             {
-                Payload = GetEncoding(taskOptions.PayloadEncoding, taskOptions.EnableBom, taskOptions.EncodingInString).GetString(e.ApplicationMessage.Payload),
+                Payload = payload,
                 Topic = e.ApplicationMessage.Topic,
+                ResponseTopic = e.ApplicationMessage.ResponseTopic,
                 QoS = GetMqttQualityOfServiceLevel(e.ApplicationMessage.QualityOfServiceLevel),
                 Retain = e.ApplicationMessage.Retain,
                 CorrelationId = e.ApplicationMessage.CorrelationData != null ? Encoding.UTF8.GetString(e.ApplicationMessage.CorrelationData) : string.Empty,

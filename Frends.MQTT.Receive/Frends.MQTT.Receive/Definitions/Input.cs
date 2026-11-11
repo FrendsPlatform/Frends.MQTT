@@ -40,6 +40,12 @@ public class Input
     public string Topic { get; set; }
 
     /// <summary>
+    /// Determines the type of the payload.
+    /// </summary>
+    /// <example>PayloadType.String</example>
+    public PayloadType PayloadType { get; set; }
+
+    /// <summary>
     /// Whether to use TLS authentication.
     /// </summary>
     /// <example>false</example>

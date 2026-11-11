@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using Frends.MQTT.Receive.Enums;
 
 /// <summary>
@@ -27,6 +28,7 @@ public class MqttMessage
     /// Determines tyhe type of the payload.
     /// </summary>
     /// <example>PayloadType.String</example>
+    [DefaultValue(PayloadType.String)]
     public PayloadType PayloadType { get; set; }
 
     /// <summary>
