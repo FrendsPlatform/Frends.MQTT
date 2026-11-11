@@ -1,8 +1,11 @@
 # Changelog
 
-## [2.1.0] - 2026-11-02
+## [3.0.0] - 2026-11-11
+### Changed
+- [Breaking Change] Changed the Input class structure so that message is now separate object including message specific properties.
 ### Added
 - Support for client certificate authentication.
+- Option to send the payload in binary format.
 
 ## [2.0.0] - 2026-08-17
 ### Added
