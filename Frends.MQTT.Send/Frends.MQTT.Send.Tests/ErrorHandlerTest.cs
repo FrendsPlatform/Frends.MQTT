@@ -49,9 +49,9 @@ namespace Frends.MQTT.Send.Tests
         {
             Host = "invalid_address",
             BrokerPort = 1883,
-            Topic = "test/topic",
             Message = new MqttMessage
             {
+                Topic = "test/topic",
                 Payload = "Test message",
             },
         };

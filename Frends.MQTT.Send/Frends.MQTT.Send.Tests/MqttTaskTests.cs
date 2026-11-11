@@ -45,9 +45,9 @@ public class MqttTaskTests
         {
             Host = "invalid_address",
             BrokerPort = 1883,
-            Topic = "test/topic",
             Message = new MqttMessage
             {
+                Topic = "test/topic",
                 PayloadType = PayloadType.String,
                 Payload = "Test message",
                 QoS = QoS.AtLeastOnce,
@@ -73,9 +73,9 @@ public class MqttTaskTests
         {
             Host = "localhost", // dockerized Mosquitto broker
             BrokerPort = 9999, // Invalid port number
-            Topic = "test/topic",
             Message = new MqttMessage
             {
+                Topic = "test/topic",
                 PayloadType = PayloadType.String,
                 Payload = "Test message FRENDS",
                 QoS = QoS.AtLeastOnce,
@@ -118,9 +118,9 @@ public class MqttTaskTests
         {
             Host = "localhost",
             BrokerPort = 1883,
-            Topic = "example topic",
             Message = new MqttMessage
             {
+                Topic = "example topic",
                 PayloadType = PayloadType.String,
                 Payload = "Test message FRENDS 1" + DateTime.Now.ToString(),
                 QoS = QoS.AtLeastOnce,
@@ -138,9 +138,9 @@ public class MqttTaskTests
         {
             Host = "localhost",
             BrokerPort = 1883,
-            Topic = "example topic",
             Message = new MqttMessage
             {
+                Topic = "example topic",
                 PayloadType = PayloadType.String,
                 Payload = "Test message FRENDS 2" + DateTime.Now.ToString(),
                 QoS = QoS.AtLeastOnce,
@@ -158,9 +158,9 @@ public class MqttTaskTests
         {
             Host = "localhost",
             BrokerPort = 1883,
-            Topic = "example topic",
             Message = new MqttMessage
             {
+                Topic = "example topic",
                 PayloadType = PayloadType.Binary,
                 Payload = Encoding.UTF8.GetBytes("Test message FRENDS 2" + DateTime.Now.ToString()),
                 QoS = QoS.AtLeastOnce,
@@ -213,9 +213,9 @@ public class MqttTaskTests
         {
             Host = "localhost",
             BrokerPort = 8883,
-            Topic = "example topic",
             Message = new MqttMessage
             {
+                Topic = "example topic",
                 PayloadType = PayloadType.String,
                 Payload = "Test message FRENDS 1" + DateTime.Now.ToString(),
                 QoS = QoS.AtLeastOnce,
@@ -233,9 +233,9 @@ public class MqttTaskTests
         {
             Host = "localhost",
             BrokerPort = 8883,
-            Topic = "example topic",
             Message = new MqttMessage
             {
+                Topic = "example topic",
                 PayloadType = PayloadType.String,
                 Payload = "Test message FRENDS 2" + DateTime.Now.ToString(),
                 QoS = QoS.AtLeastOnce,
@@ -288,9 +288,9 @@ public class MqttTaskTests
         {
             Host = "localhost",
             BrokerPort = 8884,
-            Topic = "example topic",
             Message = new MqttMessage
             {
+                Topic = "example topic",
                 PayloadType = PayloadType.String,
                 Payload = "Test message FRENDS 1" + DateTime.Now.ToString(),
                 QoS = QoS.ExactlyOnce,
@@ -308,9 +308,9 @@ public class MqttTaskTests
         {
             Host = "localhost",
             BrokerPort = 8884,
-            Topic = "example topic",
             Message = new MqttMessage
             {
+                Topic = "example topic",
                 PayloadType = PayloadType.String,
                 Payload = "Test message FRENDS 2" + DateTime.Now.ToString(),
                 QoS = QoS.ExactlyOnce,
