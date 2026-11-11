@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 /// Start broker with auto-generated TLS/auth:
 /// docker-compose up -d
 /// Run tests:
-/// dotnet test
+///     dotnet test
 /// Clean up
 /// docker-compose down --volumes
 /// </summary>

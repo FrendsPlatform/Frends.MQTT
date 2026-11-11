@@ -5,7 +5,7 @@ services:
     container_name: mqtt-setup
 
     volumes:
-      - ${MQTT_CONFIG_DIR:-./output}:/output
+      - ${MQTT_OUTPUT_DIR:-./output}:/output
 
     command:
       - /bin/sh
