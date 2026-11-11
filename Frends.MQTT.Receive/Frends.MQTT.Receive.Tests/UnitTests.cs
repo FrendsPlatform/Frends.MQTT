@@ -89,7 +89,7 @@ internal class UnitTests
         };
 
         var subscribeResult = await MQTT.Receive(input, options, default);
-        Assert.IsTrue(subscribeResult.Success);
+        Assert.IsTrue(subscribeResult.Success, "Subscribe");
 
         using var publisher = new MqttClientFactory().CreateMqttClient();
         await publisher.ConnectAsync(
@@ -109,7 +109,7 @@ internal class UnitTests
         }
 
         var receivedMessages = await MQTT.Receive(input, options, default);
-        Assert.IsTrue(receivedMessages.Success);
+        Assert.IsTrue(receivedMessages.Success, "Receive");
         Assert.AreEqual(6, receivedMessages.MessagesList.Count);
     }
 
@@ -131,7 +131,7 @@ internal class UnitTests
         };
 
         var subscribeResult = await MQTT.Receive(input, options, default);
-        Assert.IsTrue(subscribeResult.Success);
+        Assert.IsTrue(subscribeResult.Success, "Subscribe");
 
         using var publisher = new MqttClientFactory().CreateMqttClient();
 
@@ -161,6 +161,7 @@ internal class UnitTests
         }
 
         var finalMessages = await MQTT.Receive(input, options, default);
+        Assert.IsTrue(finalMessages.Success, "Receive");
         Assert.AreEqual(6, finalMessages.MessagesList.Count, "Missing messages. Check TLS handshake and broker logs.");
     }
 
@@ -224,6 +225,7 @@ internal class UnitTests
         }
 
         var finalMessages = await MQTT.Receive(input, options, default);
+        Assert.IsTrue(finalMessages.Success, "Receive");
         Assert.AreEqual(6, finalMessages.MessagesList.Count, "Missing messages. Check TLS handshake and broker logs.");
     }
 }
