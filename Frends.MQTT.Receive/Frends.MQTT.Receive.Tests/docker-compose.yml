@@ -1,4 +1,3 @@
-version: "3.9"
 
 services:
   mqtt-setup:
@@ -10,9 +9,10 @@ services:
     command: |
       set -eu
 
-      echo "Installing dependencies..."
+      echo "Installing OpenSSL and Mosquitto..."
       apk add --no-cache openssl mosquitto
 
+      echo "Preparing output directory..."
       mkdir -p /output
 
       echo "Generating CA..."
@@ -64,13 +64,27 @@ services:
       touch /output/passwd
       mosquitto_passwd -b /output/passwd testuser testpass
 
-      echo "Fixing permissions..."
+      echo "Setting permissions..."
       chmod 644 /output/*.crt
-      chmod 644 /output/*.key
-      chmod 644 /output/server.key /output/passwd
+      chmod 644 /output/server.key
+      chmod 644 /output/client.key
+      chmod 644 /output/client.pfx
+      chmod 644 /output/passwd
       chmod 600 /output/ca.key
 
-      echo "MQTT setup completed successfully."
+      echo "Verifying generated files..."
+      test -s /output/ca.crt
+      test -s /output/server.crt
+      test -s /output/server.key
+      test -s /output/client.crt
+      test -s /output/client.key
+      test -s /output/client.pfx
+      test -s /output/passwd
+
+      echo "Generated files:"
+      ls -la /output/
+
+      echo "Certificate generation completed successfully."
 
     restart: "no"
 
