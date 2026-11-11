@@ -69,11 +69,16 @@ services:
         mosquitto_passwd -b /output/passwd testuser testpass
 
         echo "Setting permissions..."
+
         chmod 644 /output/*.crt
         chmod 644 /output/server.key
         chmod 644 /output/client.key
         chmod 644 /output/client.pfx
+
+        # Allow Mosquitto to read its password file securely
+        chown 1883:1883 /output/passwd
         chmod 600 /output/passwd
+
         chmod 600 /output/ca.key
 
         echo "Verifying generated files..."
@@ -87,6 +92,9 @@ services:
 
         echo "Generated files:"
         ls -la /output/
+
+        echo "Verifying password file permissions..."
+        ls -ln /output/passwd
 
         echo "Certificate generation completed successfully."
 
