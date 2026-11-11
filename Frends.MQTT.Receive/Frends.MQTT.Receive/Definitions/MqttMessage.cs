@@ -30,7 +30,7 @@ public class MqttMessage
     public PayloadType PayloadType { get; set; }
 
     /// <summary>
-    /// The message content in byte[] or string format to be send to the MQTT broker.
+    /// The message content in byte[] or string format to be received from the MQTT broker.
     /// </summary>
     /// <example>{"temperature":22.5,"humidity":45}</example>
     required public dynamic Payload { get; set; }
