@@ -1,3 +1,4 @@
+
 name: Receive_build_test
 
 on:
@@ -15,13 +16,55 @@ jobs:
       workdir: Frends.MQTT.Receive
       dotnet_version: 8.0.x
       prebuild_command: |
-    
-        echo "Starting MQTT services..."
-        docker-compose -f Frends.MQTT.Receive.Tests/docker-compose.yml up -d
+        set -eu
 
-        echo "Waiting for MQTT broker to pass healthcheck..."
-        sleep 5
-        docker exec mqtt-broker mosquitto_sub -h localhost -p 1883 -t '$SYS/broker/version' -C 1 -W 5 || true
+        COMPOSE_FILE="Frends.MQTT.Receive.Tests/docker-compose.yml"
+
+        echo "Starting MQTT services..."
+
+        docker-compose -f "$COMPOSE_FILE" up -d
+
+        echo "Checking certificate generation..."
+
+        SETUP_EXIT_CODE=$(docker inspect mqtt-setup --format='{{.State.ExitCode}}')
+
+        if [ "$SETUP_EXIT_CODE" != "0" ]; then
+          echo "ERROR: MQTT certificate generation failed."
+          docker-compose -f "$COMPOSE_FILE" logs mqtt-setup
+          exit 1
+        fi
+
+        echo "Certificate generation completed."
+
+        echo "Waiting for MQTT broker ports..."
+
+        for port in 1883 8883 8884; do
+          echo "Waiting for port $port..."
+
+          READY=false
+
+          for i in $(seq 1 30); do
+            if timeout 2 bash -c "echo > /dev/tcp/127.0.0.1/$port" 2>/dev/null; then
+              READY=true
+              echo "Port $port is available."
+              break
+            fi
+
+            sleep 2
+          done
+
+          if [ "$READY" != "true" ]; then
+            echo "ERROR: MQTT port $port did not become available."
+
+            docker-compose -f "$COMPOSE_FILE" ps
+            docker-compose -f "$COMPOSE_FILE" logs
+
+            exit 1
+          fi
+        done
+
+        echo "All MQTT listeners are available."
+
     secrets:
       badge_service_api_key: ${{ secrets.BADGE_SERVICE_API_KEY }}
       test_feed_api_key: ${{ secrets.TASKS_TEST_FEED_API_KEY }}

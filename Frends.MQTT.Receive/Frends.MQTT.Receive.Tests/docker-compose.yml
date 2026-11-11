@@ -6,70 +6,97 @@ services:
     container_name: mqtt-setup
     volumes:
       - ./mosquitto/config:/output
-    entrypoint: >
-      sh -c '
-        apk add --no-cache openssl mosquitto &&
+    entrypoint: ["/bin/sh", "-c"]
+    command: |
+      set -eu
 
-        mkdir -p /output &&
+      echo "Installing dependencies..."
+      apk add --no-cache openssl mosquitto
 
-        echo "Generating CA..."
-        openssl genrsa -out /output/ca.key 2048
-        openssl req -x509 -new -nodes -days 365 \
-            -key /output/ca.key \
-            -out /output/ca.crt \
-            -subj "/CN=MQTT-Test-CA"
+      mkdir -p /output
 
-        echo "Generating server certificate..."
-        openssl genrsa -out /output/server.key 2048
-        openssl req -new -key /output/server.key -out /output/server.csr \
-            -subj "/CN=localhost"
-        openssl x509 -req -in /output/server.csr \
-            -CA /output/ca.crt -CAkey /output/ca.key -CAcreateserial \
-            -out /output/server.crt -days 365
+      echo "Generating CA..."
+      openssl genrsa -out /output/ca.key 2048
+      openssl req -x509 -new -nodes -days 365 \
+        -key /output/ca.key \
+        -out /output/ca.crt \
+        -subj "/CN=MQTT-Test-CA"
 
-        echo "Generating client certificate..."
-        openssl genrsa -out /output/client.key 2048
-        openssl req -new -key /output/client.key -out /output/client.csr \
-            -subj "/CN=mqtt-client"
-        openssl x509 -req -in /output/client.csr \
-            -CA /output/ca.crt -CAkey /output/ca.key -CAcreateserial \
-            -out /output/client.crt -days 365
+      echo "Generating server certificate..."
+      openssl genrsa -out /output/server.key 2048
+      openssl req -new \
+        -key /output/server.key \
+        -out /output/server.csr \
+        -subj "/CN=localhost"
 
-        echo "Generating client PFX compatible with Windows .NET..."
-        openssl pkcs12 -export \
-            -out /output/client.pfx \
-            -inkey /output/client.key \
-            -in /output/client.crt \
-            -certfile /output/ca.crt \
-            -passout pass:clientpass
+      openssl x509 -req \
+        -in /output/server.csr \
+        -CA /output/ca.crt \
+        -CAkey /output/ca.key \
+        -CAcreateserial \
+        -out /output/server.crt \
+        -days 365
 
-        echo "Generating Mosquitto password file..."
-        touch /output/passwd
-        mosquitto_passwd -b /output/passwd testuser testpass
+      echo "Generating client certificate..."
+      openssl genrsa -out /output/client.key 2048
+      openssl req -new \
+        -key /output/client.key \
+        -out /output/client.csr \
+        -subj "/CN=mqtt-client"
+
+      openssl x509 -req \
+        -in /output/client.csr \
+        -CA /output/ca.crt \
+        -CAkey /output/ca.key \
+        -CAcreateserial \
+        -out /output/client.crt \
+        -days 365
+
+      echo "Generating client PFX..."
+      openssl pkcs12 -export \
+        -out /output/client.pfx \
+        -inkey /output/client.key \
+        -in /output/client.crt \
+        -certfile /output/ca.crt \
+        -passout pass:clientpass
+
+      echo "Generating Mosquitto password file..."
+      touch /output/passwd
+      mosquitto_passwd -b /output/passwd testuser testpass
 
       echo "Fixing permissions..."
       chmod 644 /output/*.crt
       chmod 644 /output/server.key /output/passwd
       chmod 600 /output/ca.key
-      '
+
+      echo "MQTT setup completed successfully."
+
     restart: "no"
 
   mqtt-broker:
     image: eclipse-mosquitto
     container_name: mqtt-broker
+
     depends_on:
       mqtt-setup:
         condition: service_completed_successfully
+
     ports:
-      - "1883:1883" # Plain MQTT (username/password)
-      - "8883:8883" # TLS + username/password
-      - "8884:8884" # TLS + certificate-only
+      - "1883:1883"
+      - "8883:8883"
+      - "8884:8884"
+
     volumes:
       - ./mosquitto/config:/mosquitto/config
       - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+
     command: mosquitto -c /mosquitto/config/mosquitto.conf
+
     healthcheck:
-      test: ["CMD-SHELL", "mosquitto_sub -h localhost -p 1883 -t '$SYS/broker/version' -C 1 -u testuser -P testpass || exit 1"]
+      test:
+        - CMD-SHELL
+        - mosquitto_sub -h localhost -p 1883 -t '$$SYS/broker/version' -C 1 -W 3 -u testuser -P testpass
       interval: 5s
-      timeout: 3s
-      retries: 5
+      timeout: 5s
+      retries: 10
+      start_period: 5s
