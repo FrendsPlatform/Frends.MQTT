@@ -20,9 +20,30 @@ jobs:
 
         COMPOSE_FILE="Frends.MQTT.Receive.Tests/docker-compose.yml"
 
+        echo "Runner hostname:"
+        hostname
+
+        echo "Runner IP addresses:"
+        hostname -I || true
+
         echo "Starting MQTT services..."
 
         docker-compose -f "$COMPOSE_FILE" up -d
+
+        echo "Checking generated certificates..."
+        docker exec mqtt-setup ls -la /output/
+
+        echo "Checking host certificate directory..."
+        ls -la Frends.MQTT.Receive.Tests/mosquitto/config/ || true
+
+        echo "Checking broker container..."
+        docker-compose -f Frends.MQTT.Receive.Tests/docker-compose.yml ps
+
+        echo "Checking published ports..."
+        docker port mqtt-broker || true
+
+        echo "Checking listening ports..."
+        ss -lnt
 
         echo "Checking certificate generation..."
 

@@ -25,6 +25,24 @@ using System.Threading.Tasks;
 internal class UnitTests
 {
     private static Options options;
+    private static string certPath;
+    private static string keyPath;
+
+    [OneTimeSetUp]
+    public void OneTimeSetup()
+    {
+        var certDirectory = Path.GetFullPath(
+            Path.Combine(AppContext.BaseDirectory, "../../../mosquitto/config"));
+
+        certPath = Path.Combine(certDirectory, "client.crt");
+        keyPath = Path.Combine(certDirectory, "client.key");
+
+        Assert.That(Directory.Exists(certDirectory), Is.True, $"Certificate directory not found: {certDirectory}");
+
+        Assert.That(File.Exists(certPath), Is.True, $"Client certificate not found: {certPath}");
+
+        Assert.That(File.Exists(keyPath), Is.True, $"Client key not found: {keyPath}");
+    }
 
     [SetUp]
     public void Setup()
@@ -174,8 +192,10 @@ internal class UnitTests
     [Test]
     public async Task ShouldSuccessfullyConnectToBrokerWithTlsAndCertificate()
     {
-        var certPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.crt");
-        var keyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.key");
+
+        TestContext.WriteLine($"Current directory: {Directory.GetCurrentDirectory()}");
+        TestContext.WriteLine($"Base directory: {AppContext.BaseDirectory}");
+        TestContext.WriteLine($"Machine: {Environment.MachineName}");
 
         var input = new Input
         {
