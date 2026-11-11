@@ -217,7 +217,7 @@ internal class UnitTests
         Assert.That(
             subscribeResult.Success,
             Is.True,
-            $"Subscribe failed. Error: {subscribeResult.Error?.Message}.");
+            $"Subscribe failed. Error: {subscribeResult.Error?.Message}");
 
         using var publisher = new MqttClientFactory().CreateMqttClient();
 

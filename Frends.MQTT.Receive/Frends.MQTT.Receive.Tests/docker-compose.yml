@@ -73,7 +73,7 @@ services:
         chmod 644 /output/server.key
         chmod 644 /output/client.key
         chmod 644 /output/client.pfx
-        chmod 644 /output/passwd
+        chmod 600 /output/passwd
         chmod 600 /output/ca.key
 
         echo "Verifying generated files..."
@@ -113,8 +113,8 @@ services:
     healthcheck:
       test:
         - CMD-SHELL
-        - mosquitto_sub -h localhost -p 1883 -t '$$SYS/broker/version' -C 1 -W 3 -u testuser -P testpass
+        - mosquitto_sub -h localhost -p 1883 -t '$$SYS/broker/version' -C 1 -W 15 -u testuser -P testpass
       interval: 5s
-      timeout: 5s
+      timeout: 20s
       retries: 10
       start_period: 5s

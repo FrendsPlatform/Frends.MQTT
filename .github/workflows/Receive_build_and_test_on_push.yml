@@ -99,11 +99,36 @@ jobs:
           fi
         done
 
-        echo "All MQTT listeners are available."
-
         echo "Checking MQTT broker authentication..."
-        docker exec mqtt-broker sh -c \
-          'mosquitto_sub -h localhost -p 1883 -t "$SYS/broker/version" -C 1 -W 5 -u testuser -P testpass'
+
+        docker exec mqtt-broker sh -c '
+          mosquitto_sub \
+            -h localhost \
+            -p 1883 \
+            -t ci/auth-check \
+            -C 1 \
+            -W 10 \
+            -u testuser \
+            -P testpass &
+          SUB_PID=$!
+
+          sleep 1
+
+          mosquitto_pub \
+            -h localhost \
+            -p 1883 \
+            -t ci/auth-check \
+            -m authentication-ok \
+            -u testuser \
+            -P testpass
+
+          wait "$SUB_PID"
+        '
+
+        echo "MQTT authentication test passed."
+
+        echo "Mosquitto broker logs:"
+        docker logs mqtt-broker
 
         echo "MQTT broker is ready."
 
