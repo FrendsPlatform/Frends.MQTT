@@ -19,29 +19,38 @@ jobs:
         set -eu
 
         COMPOSE_FILE="Frends.MQTT.Receive.Tests/docker-compose.yml"
-        CERT_DIR="Frends.MQTT.Receive.Tests/mosquitto/config"
+        CERT_DIR="$(pwd)/Frends.MQTT.Receive.Tests/mosquitto/config"
+
+        export MQTT_CONFIG_DIR="$CERT_DIR"
 
         echo "Runner hostname:"
         hostname
 
-        echo "Runner IP addresses:"
-        hostname -I || true
+        echo "Working directory:"
+        pwd
+
+        echo "Certificate directory:"
+        echo "$MQTT_CONFIG_DIR"
 
         echo "Starting MQTT services..."
         docker-compose -f "$COMPOSE_FILE" up -d
 
-        echo "Checking certificate generation..."
+        echo "Setup container logs:"
+        docker logs mqtt-setup
+
+        echo "Inspecting setup container mounts:"
+        docker inspect mqtt-setup \
+          --format='{{json .Mounts}}'
+
+        echo "Checking setup container exit code:"
         SETUP_EXIT_CODE=$(docker inspect mqtt-setup --format='{{.State.ExitCode}}')
 
         if [ "$SETUP_EXIT_CODE" != "0" ]; then
-          echo "ERROR: MQTT certificate generation failed."
-          docker-compose -f "$COMPOSE_FILE" logs mqtt-setup
+          echo "ERROR: Certificate generation failed."
           exit 1
         fi
 
-        echo "Certificate generation completed."
-
-        echo "Checking generated certificates on runner..."
+        echo "Checking generated certificates..."
         ls -la "$CERT_DIR"
 
         test -s "$CERT_DIR/ca.crt"
@@ -63,7 +72,6 @@ jobs:
 
         for port in 1883 8883 8884; do
           echo "Waiting for port $port..."
-
           READY=false
 
           for i in $(seq 1 30); do
@@ -78,10 +86,8 @@ jobs:
 
           if [ "$READY" != "true" ]; then
             echo "ERROR: MQTT port $port did not become available."
-
             docker-compose -f "$COMPOSE_FILE" ps
             docker-compose -f "$COMPOSE_FILE" logs
-
             exit 1
           fi
         done

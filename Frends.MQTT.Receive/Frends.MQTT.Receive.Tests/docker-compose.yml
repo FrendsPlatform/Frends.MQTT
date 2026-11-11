@@ -4,7 +4,7 @@ services:
     image: alpine:latest
     container_name: mqtt-setup
     volumes:
-      - ./mosquitto/config:/output
+      - ${MQTT_CONFIG_DIR}:/output
     entrypoint: ["/bin/sh", "-c"]
     command: |
       set -eu
@@ -102,8 +102,7 @@ services:
       - "8884:8884"
 
     volumes:
-      - ./mosquitto/config:/mosquitto/config
-      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ${MQTT_CONFIG_DIR}:/mosquitto/config
 
     command: mosquitto -c /mosquitto/config/mosquitto.conf
 
