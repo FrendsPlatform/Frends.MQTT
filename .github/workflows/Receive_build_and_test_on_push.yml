@@ -35,6 +35,13 @@ jobs:
         echo "Starting MQTT services..."
         docker-compose -f "$COMPOSE_FILE" up -d
 
+        echo "Setup container command:"
+        docker inspect mqtt-setup \
+          --format='Entrypoint={{json .Config.Entrypoint}} Cmd={{json .Config.Cmd}}'
+
+        echo "Setup container logs:"
+        docker logs mqtt-setup
+
         echo "Setup container logs:"
         docker logs mqtt-setup
 
