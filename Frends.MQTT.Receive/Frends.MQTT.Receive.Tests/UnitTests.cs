@@ -89,7 +89,10 @@ internal class UnitTests
         };
 
         var subscribeResult = await MQTT.Receive(input, options, default);
-        Assert.IsTrue(subscribeResult.Success, "Subscribe");
+        Assert.That(
+            subscribeResult.Success,
+            Is.True,
+            $"Subscribe failed. Error: {subscribeResult.Error?.Message}");
 
         using var publisher = new MqttClientFactory().CreateMqttClient();
         await publisher.ConnectAsync(
@@ -131,7 +134,10 @@ internal class UnitTests
         };
 
         var subscribeResult = await MQTT.Receive(input, options, default);
-        Assert.IsTrue(subscribeResult.Success, "Subscribe");
+        Assert.That(
+            subscribeResult.Success,
+            Is.True,
+            $"Subscribe failed. Error: {subscribeResult.Error?.Message}");
 
         using var publisher = new MqttClientFactory().CreateMqttClient();
 
@@ -187,7 +193,11 @@ internal class UnitTests
         };
 
         var subscribeResult = await MQTT.Receive(input, options, default);
-        Assert.IsTrue(subscribeResult.Success, "Subscribe");
+
+        Assert.That(
+            subscribeResult.Success,
+            Is.True,
+            $"Subscribe failed. Error: {subscribeResult.Error?.Message}");
 
         using var publisher = new MqttClientFactory().CreateMqttClient();
 
