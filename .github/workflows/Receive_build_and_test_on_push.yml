@@ -19,6 +19,7 @@ jobs:
         set -eu
 
         COMPOSE_FILE="Frends.MQTT.Receive.Tests/docker-compose.yml"
+        CERT_DIR="Frends.MQTT.Receive.Tests/mosquitto/config"
 
         echo "Runner hostname:"
         hostname
@@ -27,26 +28,9 @@ jobs:
         hostname -I || true
 
         echo "Starting MQTT services..."
-
         docker-compose -f "$COMPOSE_FILE" up -d
 
-        echo "Checking generated certificates..."
-        docker exec mqtt-setup ls -la /output/
-
-        echo "Checking host certificate directory..."
-        ls -la Frends.MQTT.Receive.Tests/mosquitto/config/ || true
-
-        echo "Checking broker container..."
-        docker-compose -f Frends.MQTT.Receive.Tests/docker-compose.yml ps
-
-        echo "Checking published ports..."
-        docker port mqtt-broker || true
-
-        echo "Checking listening ports..."
-        ss -lnt
-
         echo "Checking certificate generation..."
-
         SETUP_EXIT_CODE=$(docker inspect mqtt-setup --format='{{.State.ExitCode}}')
 
         if [ "$SETUP_EXIT_CODE" != "0" ]; then
@@ -56,6 +40,24 @@ jobs:
         fi
 
         echo "Certificate generation completed."
+
+        echo "Checking generated certificates on runner..."
+        ls -la "$CERT_DIR"
+
+        test -s "$CERT_DIR/ca.crt"
+        test -s "$CERT_DIR/server.crt"
+        test -s "$CERT_DIR/server.key"
+        test -s "$CERT_DIR/client.crt"
+        test -s "$CERT_DIR/client.key"
+        test -s "$CERT_DIR/passwd"
+
+        echo "All certificate files exist."
+
+        echo "Checking broker container..."
+        docker-compose -f "$COMPOSE_FILE" ps
+
+        echo "Checking published ports..."
+        docker port mqtt-broker
 
         echo "Waiting for MQTT broker ports..."
 
@@ -85,6 +87,12 @@ jobs:
         done
 
         echo "All MQTT listeners are available."
+
+        echo "Checking MQTT broker authentication..."
+        docker exec mqtt-broker sh -c \
+          'mosquitto_sub -h localhost -p 1883 -t "$SYS/broker/version" -C 1 -W 5 -u testuser -P testpass'
+
+        echo "MQTT broker is ready."
 
     secrets:
       badge_service_api_key: ${{ secrets.BADGE_SERVICE_API_KEY }}

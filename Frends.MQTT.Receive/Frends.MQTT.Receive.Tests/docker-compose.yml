@@ -66,6 +66,7 @@ services:
 
       echo "Fixing permissions..."
       chmod 644 /output/*.crt
+      chmod 644 /output/*.key
       chmod 644 /output/server.key /output/passwd
       chmod 600 /output/ca.key
 
