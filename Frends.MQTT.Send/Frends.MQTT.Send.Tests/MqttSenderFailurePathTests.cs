@@ -11,28 +11,6 @@ using NUnit.Framework;
 [TestFixture]
 public class MqttSenderFailurePathTests
 {
-    private static Options TestOptions() => new Options
-    {
-        ThrowErrorOnFailure = false,
-        ErrorMessageOnFailure = string.Empty,
-    };
-
-    private static Input CreateInput() => new Input
-    {
-        Host = "localhost",
-        BrokerPort = 1883,
-        AuthenticationMethod = AuthenticationMethod.UsernamePassword,
-        Username = "testuser",
-        Password = "testpass",
-        Message = new MqttMessage
-        {
-            Topic = "coverage/send",
-            PayloadType = PayloadType.String,
-            Payload = "coverage test",
-            QoS = QoS.AtLeastOnce,
-        },
-    };
-
     [Test]
     public async Task Send_ReturnsFailure_WhenUserPropertiesJsonIsMalformed()
     {
@@ -98,8 +76,9 @@ public class MqttSenderFailurePathTests
         var result = await MQTT.Send(input, TestOptions(), CancellationToken.None);
 
         Assert.That(result.Success, Is.False);
-        Assert.That(result.Error!.Message, Does.Contain("not-base64"));
+        Assert.That(result.Error!.Message, Does.Contain("The input is not a valid Base-64 string as it contains a non-base 64 character, more than two padding characters, or an illegal character among the padding characters."));
     }
+
     [TestCase(QoS.AtMostOnce)]
     [TestCase(QoS.AtLeastOnce)]
     [TestCase(QoS.ExactlyOnce)]
@@ -114,4 +93,25 @@ public class MqttSenderFailurePathTests
         Assert.That(result.Data, Is.EqualTo("Message sent."));
     }
 
+    private static Options TestOptions() => new Options
+    {
+        ThrowErrorOnFailure = false,
+        ErrorMessageOnFailure = string.Empty,
+    };
+
+    private static Input CreateInput() => new Input
+    {
+        Host = "localhost",
+        BrokerPort = 1883,
+        AuthenticationMethod = AuthenticationMethod.UsernamePassword,
+        Username = "testuser",
+        Password = "testpass",
+        Message = new MqttMessage
+        {
+            Topic = "coverage/send",
+            PayloadType = PayloadType.String,
+            Payload = "coverage test",
+            QoS = QoS.AtLeastOnce,
+        },
+    };
 }

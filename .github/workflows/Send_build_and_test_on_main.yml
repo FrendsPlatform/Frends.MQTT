@@ -18,9 +18,14 @@ jobs:
         set -eu
 
         COMPOSE_FILE="Frends.MQTT.Send.Tests/docker-compose.yml"
-        CERT_DIR="$(pwd)/Frends.MQTT.Send.Tests/mosquitto/config"
+        CERT_DIR="$(pwd)/Frends.MQTT.Send.Tests/output"
+        CONFIG_DIR="$(pwd)/Frends.MQTT.Send.Tests/mosquitto/config"
 
-        export MQTT_CONFIG_DIR="$CERT_DIR"
+        export MQTT_CONFIG_DIR="$CONFIG_DIR"
+        export MQTT_OUTPUT_DIR="$CERT_DIR"
+
+        echo "Creating required directories..."
+        mkdir -p "$CERT_DIR" "$CONFIG_DIR"
 
         echo "Runner hostname:"
         hostname
@@ -28,8 +33,11 @@ jobs:
         echo "Working directory:"
         pwd
 
-        echo "Certificate directory:"
-        echo "$MQTT_CONFIG_DIR"
+        echo "Certificate directory: $MQTT_OUTPUT_DIR"
+        echo "Mosquitto config directory: $MQTT_CONFIG_DIR"
+
+        echo "Removing previous containers..."
+        docker-compose -f "$COMPOSE_FILE" down --remove-orphans
 
         echo "Starting MQTT services..."
         docker-compose -f "$COMPOSE_FILE" up -d
@@ -37,9 +45,6 @@ jobs:
         echo "Setup container command:"
         docker inspect mqtt-setup \
           --format='Entrypoint={{json .Config.Entrypoint}} Cmd={{json .Config.Cmd}}'
-
-        echo "Setup container logs:"
-        docker logs mqtt-setup
 
         echo "Setup container logs:"
         docker logs mqtt-setup
@@ -53,6 +58,7 @@ jobs:
 
         if [ "$SETUP_EXIT_CODE" != "0" ]; then
           echo "ERROR: Certificate generation failed."
+          docker-compose -f "$COMPOSE_FILE" logs
           exit 1
         fi
 
@@ -64,6 +70,7 @@ jobs:
         test -s "$CERT_DIR/server.key"
         test -s "$CERT_DIR/client.crt"
         test -s "$CERT_DIR/client.key"
+        test -s "$CERT_DIR/client.pfx"
         test -s "$CERT_DIR/passwd"
 
         echo "All certificate files exist."

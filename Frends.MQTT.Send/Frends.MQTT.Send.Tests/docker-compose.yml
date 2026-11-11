@@ -5,7 +5,7 @@ services:
     container_name: mqtt-setup
 
     volumes:
-      - ${MQTT_CONFIG_DIR}:/output
+      - ${MQTT_CONFIG_DIR:-./output}:/output
 
     command:
       - /bin/sh
@@ -101,23 +101,19 @@ services:
     restart: "no"
 
   mqtt-broker:
-    image: eclipse-mosquitto
+    image: eclipse-mosquitto:2
     container_name: mqtt-broker
-
     depends_on:
       mqtt-setup:
         condition: service_completed_successfully
-
     ports:
       - "1883:1883"
       - "8883:8883"
       - "8884:8884"
-
     volumes:
-      - ${MQTT_CONFIG_DIR}:/mosquitto/config
-
+      - ${MQTT_CONFIG_DIR:-./mosquitto/config}:/mosquitto/config:ro
+      - ${MQTT_OUTPUT_DIR:-./output}:/mosquitto/output:ro
     command: mosquitto -c /mosquitto/config/mosquitto.conf
-
     healthcheck:
       test:
         - CMD-SHELL

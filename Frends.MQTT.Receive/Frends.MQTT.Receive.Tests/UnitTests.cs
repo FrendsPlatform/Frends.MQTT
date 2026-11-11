@@ -32,7 +32,7 @@ internal class UnitTests
     public void OneTimeSetup()
     {
         var certDirectory = Path.GetFullPath(
-            Path.Combine(AppContext.BaseDirectory, "../../../mosquitto/config"));
+            Path.Combine(AppContext.BaseDirectory, "../../../output"));
 
         certPath = Path.Combine(certDirectory, "client.crt");
         keyPath = Path.Combine(certDirectory, "client.key");
@@ -110,7 +110,7 @@ internal class UnitTests
         Assert.That(
             subscribeResult.Success,
             Is.True,
-            $"Subscribe failed. Error: {subscribeResult.Error?.Message}");
+            $"Subscribe failed. Error: {subscribeResult.Error?.Message}.");
 
         using var publisher = new MqttClientFactory().CreateMqttClient();
         await publisher.ConnectAsync(

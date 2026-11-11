@@ -37,7 +37,7 @@ public class CertificateLoaderTests
         _pemPath = Path.Combine(_directory, "client.pem");
         _keyPath = Path.Combine(_directory, "client.key");
         File.WriteAllText(_pemPath, certificate.ExportCertificatePem());
-        using var privateKey = certificate.GetRSAPrivateKey()!;
+        using var privateKey = certificate.GetRSAPrivateKey();
         File.WriteAllText(_keyPath, privateKey.ExportPkcs8PrivateKeyPem());
 
         _publicPfxPath = Path.Combine(_directory, "public-only.pfx");
@@ -127,7 +127,9 @@ public class CertificateLoaderTests
     [TestCase(null)]
     [TestCase("")]
     [TestCase("   ")]
+#pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
     public void LoadFromBase64_ThrowsForEmptyInput(string? value)
+#pragma warning restore CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
     {
         Assert.Throws<ArgumentException>(() => CertificateLoader.LoadFromBase64(value!));
     }

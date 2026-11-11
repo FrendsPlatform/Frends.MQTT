@@ -130,6 +130,7 @@ internal class MQTTConnectionCreator
         {
             var message = new MqttMessage
             {
+                Topic = e.ApplicationMessage.Topic,
                 Payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload),
                 QoS = GetMqttQualityOfServiceLevel(e.ApplicationMessage.QualityOfServiceLevel),
                 Retain = e.ApplicationMessage.Retain,

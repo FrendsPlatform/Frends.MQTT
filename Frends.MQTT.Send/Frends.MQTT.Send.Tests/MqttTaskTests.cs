@@ -23,6 +23,24 @@ using System.Threading.Tasks;
 public class MqttTaskTests
 {
     private static Options options;
+    private static string certPath;
+    private static string keyPath;
+
+    [OneTimeSetUp]
+    public void OneTimeSetup()
+    {
+        var certDirectory = Path.GetFullPath(
+            Path.Combine(AppContext.BaseDirectory, "../../../output"));
+
+        certPath = Path.Combine(certDirectory, "client.crt");
+        keyPath = Path.Combine(certDirectory, "client.key");
+
+        Assert.That(Directory.Exists(certDirectory), Is.True, $"Certificate directory not found: {certDirectory}");
+
+        Assert.That(File.Exists(certPath), Is.True, $"Client certificate not found: {certPath}");
+
+        Assert.That(File.Exists(keyPath), Is.True, $"Client key not found: {keyPath}");
+    }
 
     [SetUp]
     public void Setup()
@@ -35,7 +53,7 @@ public class MqttTaskTests
     }
 
     /// <summary>
-    /// This test attempts to connect to an invalid broker address.
+    /// This test attempts to connect to an invalid broker address
     /// </summary>
     /// <returns> Test succeeds when the connection is refused. </returns>
     [Test]
@@ -261,9 +279,6 @@ public class MqttTaskTests
     [Test]
     public async Task ShouldSuccessfullyConnectToBrokerWithTlsAndPFXCertificate()
     {
-        var certPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.crt");
-        var keyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../mosquitto/config/client.key");
-
         var inputRecieve = new InputReceive
         {
             Host = "localhost",
