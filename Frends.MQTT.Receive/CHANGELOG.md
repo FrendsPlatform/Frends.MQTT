@@ -5,7 +5,7 @@
 - [Breaking Change] Changed the Input class structure so that message is now separate object including message specific properties.
 ### Added
 - Support for client certificate authentication.
-- Option to receive the payload in binary format.
+- Option to receive the payload in binary format (base64 string).
 
 ## [1.1.0] - 2026-08-17
 ### Added

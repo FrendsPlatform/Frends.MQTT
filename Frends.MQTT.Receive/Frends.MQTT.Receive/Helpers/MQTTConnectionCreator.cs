@@ -5,6 +5,7 @@ using Frends.MQTT.Receive.Enums;
 using MQTTnet;
 using MQTTnet.Protocol;
 using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Security.Authentication;
@@ -127,7 +128,7 @@ internal class MQTTConnectionCreator
         {
             dynamic payload = taskInput.PayloadType == PayloadType.String
                 ? GetEncoding(taskOptions.PayloadEncoding, taskOptions.EnableBom, taskOptions.EncodingInString).GetString(e.ApplicationMessage.Payload)
-                : e.ApplicationMessage.Payload;
+                : e.ApplicationMessage.Payload.ToArray();
 
             var message = new MqttMessage
             {
