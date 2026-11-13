@@ -2,6 +2,7 @@ namespace Frends.MQTT.Send.Tests
 {
     using System;
     using System.Threading;
+    using System.Threading.Tasks;
     using Frends.MQTT.Send;
     using Frends.MQTT.Send.Definitions;
     using NUnit.Framework;
@@ -20,11 +21,15 @@ namespace Frends.MQTT.Send.Tests
         }
 
         [Test]
-        public async System.Threading.Tasks.Task Should_Return_Failed_Result_When_ThrowErrorOnFailure_Is_False()
+        public async Task Should_Return_Failed_Result_When_ThrowErrorOnFailure_Is_False()
         {
             var options = DefaultOptions();
             options.ThrowErrorOnFailure = false;
             var result = await MQTT.Send(InvalidInput(), options, CancellationToken.None);
+
+            Console.WriteLine(result.Data);
+            Console.WriteLine(result.Error);
+
             Assert.That(result.Success, Is.False);
             Assert.That(result.Error, Is.Not.Null);
             Assert.That(result.Error!.Message, Does.Contain("Failed to send MQTT message"));
@@ -44,8 +49,11 @@ namespace Frends.MQTT.Send.Tests
         {
             Host = "invalid_address",
             BrokerPort = 1883,
-            Topic = "test/topic",
-            Message = "Test message",
+            Message = new MqttMessage
+            {
+                Topic = "test/topic",
+                Payload = "Test message",
+            },
         };
 
         private static Options DefaultOptions() => new Options { ThrowErrorOnFailure = true };

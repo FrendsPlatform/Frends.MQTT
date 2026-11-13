@@ -1,14 +1,17 @@
 namespace Frends.MQTT.Receive.Tests;
 
-using System.Threading.Tasks;
 using Frends.MQTT.Receive.Definitions;
-using NUnit.Framework;
+using Frends.MQTT.Receive.Enums;
+using Frends.MQTT.Receive.Helpers;
 using MQTTnet;
-using System.Threading;
-using System;
-using System.Security.Authentication;
-using System.Net.Security;
 using MQTTnet.Protocol;
+using NUnit.Framework;
+using System;
+using System.IO;
+using System.Net.Security;
+using System.Security.Authentication;
+using System.Threading;
+using System.Threading.Tasks;
 
 /// <summary>
 /// Start broker with auto-generated TLS/auth:
@@ -21,10 +24,38 @@ using MQTTnet.Protocol;
 [TestFixture]
 internal class UnitTests
 {
-    /// <summary>
-    /// This test attempts to connect to an invalid broker address.
-    /// </summary>
-    /// <returns> Test succeeds when the connection is refused. </returns>
+    private static Options options;
+    private static string certPath;
+    private static string keyPath;
+
+    [OneTimeSetUp]
+    public void OneTimeSetup()
+    {
+        var certDirectory = Path.GetFullPath(
+            Path.Combine(AppContext.BaseDirectory, "../../../output"));
+
+        certPath = Path.Combine(certDirectory, "client.crt");
+        keyPath = Path.Combine(certDirectory, "client.key");
+
+        Assert.That(Directory.Exists(certDirectory), Is.True, $"Certificate directory not found: {certDirectory}");
+
+        Assert.That(File.Exists(certPath), Is.True, $"Client certificate not found: {certPath}");
+
+        Assert.That(File.Exists(keyPath), Is.True, $"Client key not found: {keyPath}");
+    }
+
+    [SetUp]
+    public void Setup()
+    {
+        options = new Options
+        {
+            ErrorMessageOnFailure = string.Empty,
+            ThrowErrorOnFailure = false,
+            PayloadEncoding = PayloadEncoding.UTF8,
+            EnableBom = false,
+        };
+    }
+
     [Test]
     public async Task Send_ShouldReturnErrorResult_WhenHostAddressIsInvalid()
     {
@@ -35,30 +66,27 @@ internal class UnitTests
             Topic = "test/topic",
         };
 
-        var result = await MQTT.Receive(input, new Options { ThrowErrorOnFailure = false }, CancellationToken.None);
+        var result = await MQTT.Receive(input, options, CancellationToken.None);
 
         Assert.IsFalse(result.Success);
-        Assert.That(result.Error, Does.Contain("Error while connecting host"));
+        Assert.That(result.Error.Message, Does.Contain("Error while connecting host"));
     }
 
-    /// <summary>
-    /// Test attempts to connect to an incorrect broker port.
-    /// </summary>
-    /// <returns> Success if it returns an error. </returns>
     [Test]
     public async Task Send_ShouldReturnErrorResult_WhenBrokerPortIsInvalid()
     {
         var input = new Input
         {
-            Host = "localhost", // dockerized Mosquitto broker
-            BrokerPort = 99999, // Invalid port number
+            Host = "localhost",
+            BrokerPort = 65535,
             Topic = "test/topic",
+            UseTls12 = false,
         };
 
-        var result = await MQTT.Receive(input, new Options { ThrowErrorOnFailure = false }, CancellationToken.None);
+        var result = await MQTT.Receive(input, options, CancellationToken.None);
 
         Assert.IsFalse(result.Success);
-        Assert.That(result.Error, Does.Contain($"port ('{input.BrokerPort}') must be less than or equal"));
+        Assert.That(result.Error.Message, Does.Contain($"Error while trying to connect to MQTT broker: Error while connecting host"));
     }
 
     [Test]
@@ -78,8 +106,11 @@ internal class UnitTests
             AllowInvalidCertificate = true,
         };
 
-        var subscribeResult = await MQTT.Receive(input, new Options(), default);
-        Assert.IsTrue(subscribeResult.Success);
+        var subscribeResult = await MQTT.Receive(input, options, default);
+        Assert.That(
+            subscribeResult.Success,
+            Is.True,
+            $"Subscribe failed. Error: {subscribeResult.Error?.Message}.");
 
         using var publisher = new MqttClientFactory().CreateMqttClient();
         await publisher.ConnectAsync(
@@ -98,8 +129,8 @@ internal class UnitTests
                     .Build());
         }
 
-        var receivedMessages = await MQTT.Receive(input, new Options(), default);
-        Assert.IsTrue(receivedMessages.Success);
+        var receivedMessages = await MQTT.Receive(input, options, default);
+        Assert.IsTrue(receivedMessages.Success, "Receive");
         Assert.AreEqual(6, receivedMessages.MessagesList.Count);
     }
 
@@ -120,8 +151,11 @@ internal class UnitTests
             AllowInvalidCertificate = true,
         };
 
-        var subscribeResult = await MQTT.Receive(input, new Options(), default);
-        Assert.IsTrue(subscribeResult.Success);
+        var subscribeResult = await MQTT.Receive(input, options, default);
+        Assert.That(
+            subscribeResult.Success,
+            Is.True,
+            $"Subscribe failed. Error: {subscribeResult.Error?.Message}.");
 
         using var publisher = new MqttClientFactory().CreateMqttClient();
 
@@ -150,7 +184,78 @@ internal class UnitTests
                     .Build());
         }
 
-        var finalMessages = await MQTT.Receive(input, new Options(), default);
+        var finalMessages = await MQTT.Receive(input, options, default);
+        Assert.IsTrue(finalMessages.Success, "Receive");
+        Assert.AreEqual(6, finalMessages.MessagesList.Count, "Missing messages. Check TLS handshake and broker logs.");
+    }
+
+    [Test]
+    public async Task ShouldSuccessfullyConnectToBrokerWithTlsAndCertificate()
+    {
+
+        TestContext.WriteLine($"Current directory: {Directory.GetCurrentDirectory()}");
+        TestContext.WriteLine($"Base directory: {AppContext.BaseDirectory}");
+        TestContext.WriteLine($"Machine: {Environment.MachineName}");
+
+        var input = new Input
+        {
+            Host = "localhost",
+            BrokerPort = 8884,
+            ClientId = Guid.NewGuid().ToString(),
+            Topic = "example topic",
+            ReceivingTime = 10,
+            UseTls12 = true,
+            QoS = QoS.ExactlyOnce,
+            AllowInvalidCertificate = true,
+            AuthenticationMethod = AuthenticationMethod.ClientCertificateFromFile,
+            CertificateFilePath = certPath,
+            CertificateKeyFilePath = keyPath,
+        };
+
+        var subscribeResult = await MQTT.Receive(input, options, default);
+
+        Assert.That(
+            subscribeResult.Success,
+            Is.True,
+            $"Subscribe failed. Error: {subscribeResult.Error?.Message}");
+
+        using var publisher = new MqttClientFactory().CreateMqttClient();
+
+        var tlsOptions = new MqttClientTlsOptionsBuilder()
+            .WithCertificateValidationHandler(o =>
+            {
+                if (o.SslPolicyErrors != SslPolicyErrors.None)
+                {
+                    if (input.AllowInvalidCertificate)
+                        return true;
+                    else
+                        throw new InvalidCredentialException(o.SslPolicyErrors.ToString());
+                }
+
+                return true;
+            })
+            .WithSslProtocols(SslProtocols.Tls12)
+            .WithClientCertificates(new[] { CertificateLoader.LoadFromFile(certPath, keyPath) })
+            .Build();
+
+        await publisher.ConnectAsync(
+            new MqttClientOptionsBuilder()
+                .WithTcpServer(input.Host, input.BrokerPort)
+                .WithTlsOptions(tlsOptions)
+                .Build());
+
+        for (int i = 0; i < 6; i++)
+        {
+            await publisher.PublishAsync(
+                new MqttApplicationMessageBuilder()
+                    .WithTopic(input.Topic)
+                    .WithPayload($"TLS test {i}")
+                    .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.ExactlyOnce)
+                    .Build());
+        }
+
+        var finalMessages = await MQTT.Receive(input, options, default);
+        Assert.IsTrue(finalMessages.Success, "Receive");
         Assert.AreEqual(6, finalMessages.MessagesList.Count, "Missing messages. Check TLS handshake and broker logs.");
     }
 }

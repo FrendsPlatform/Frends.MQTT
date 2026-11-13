@@ -3,9 +3,9 @@
 using System;
 using System.ComponentModel;
 using System.Threading;
+using System.Threading.Tasks;
 using Frends.MQTT.Receive.Definitions;
 using Frends.MQTT.Receive.Helpers;
-using System.Threading.Tasks;
 
 /// <summary>
 /// Main class of the Task to connect to an MQTT broker and start a message listening session.
@@ -16,16 +16,16 @@ public static class MQTT
     /// This is the Task to connnect to an MQTT broker and start a listening session.
     /// [Documentation](https://tasks.frends.com/tasks/frends-tasks/Frends.MQTT.Receive).
     /// </summary>
-    /// <param name="input">MQTT broker connection options: broker address, port, duration of task, topic subscribed to, (optional) previous session id, TLS (y/n), QoS </param>
+    /// <param name="input">MQTT broker connection options: broker address, port, duration of task, topic subscribed to, (optional) previous session id, TLS (y/n), QoS.</param>
     /// <param name="options">Additional options to control error handling behaviour.</param>
     /// <param name="cancellationToken">Cancellation token given by Frends.</param>
-    /// <returns>Object { bool Success, string CurrentClientId, string Error, List(string) MessagesList }</returns>
+    /// <returns>Object { bool Success, string CurrentClientId, string Error, List MessagesList }</returns>
     public static async Task<Result> Receive([PropertyTab] Input input, [PropertyTab] Options options, CancellationToken cancellationToken)
     {
         try
         {
             var connector = new MQTTConnectionCreator();
-            var result = await connector.ConnectToBroker(input, cancellationToken);
+            var result = await connector.ConnectToBroker(input, options, cancellationToken);
 
             return result;
         }

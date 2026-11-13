@@ -1,3 +1,4 @@
+
 name: Receive_build_test
 
 on:
@@ -15,13 +16,129 @@ jobs:
       workdir: Frends.MQTT.Receive
       dotnet_version: 8.0.x
       prebuild_command: |
-    
-        echo "Starting MQTT services..."
-        docker-compose -f Frends.MQTT.Receive.Tests/docker-compose.yml up -d
+        set -eu
 
-        echo "Waiting for MQTT broker to pass healthcheck..."
-        sleep 5
-        docker exec mqtt-broker mosquitto_sub -h localhost -p 1883 -t '$SYS/broker/version' -C 1 -W 5 || true
+        COMPOSE_FILE="Frends.MQTT.Receive.Tests/docker-compose.yml"
+        CERT_DIR="$(pwd)/Frends.MQTT.Receive.Tests/output"
+        CONFIG_DIR="$(pwd)/Frends.MQTT.Receive.Tests/mosquitto/config"
+
+        export MQTT_CONFIG_DIR="$CONFIG_DIR"
+        export MQTT_OUTPUT_DIR="$CERT_DIR"
+
+        echo "Creating required directories..."
+        mkdir -p "$CERT_DIR" "$CONFIG_DIR"
+
+        echo "Runner hostname:"
+        hostname
+
+        echo "Working directory:"
+        pwd
+
+        echo "Certificate directory: $MQTT_OUTPUT_DIR"
+        echo "Mosquitto config directory: $MQTT_CONFIG_DIR"
+
+        echo "Removing previous containers..."
+        docker-compose -f "$COMPOSE_FILE" down --remove-orphans
+
+        echo "Starting MQTT services..."
+        docker-compose -f "$COMPOSE_FILE" up -d
+
+        echo "Setup container command:"
+        docker inspect mqtt-setup \
+          --format='Entrypoint={{json .Config.Entrypoint}} Cmd={{json .Config.Cmd}}'
+
+        echo "Setup container logs:"
+        docker logs mqtt-setup
+
+        echo "Inspecting setup container mounts:"
+        docker inspect mqtt-setup \
+          --format='{{json .Mounts}}'
+
+        echo "Checking setup container exit code:"
+        SETUP_EXIT_CODE=$(docker inspect mqtt-setup --format='{{.State.ExitCode}}')
+
+        if [ "$SETUP_EXIT_CODE" != "0" ]; then
+          echo "ERROR: Certificate generation failed."
+          docker-compose -f "$COMPOSE_FILE" logs
+          exit 1
+        fi
+
+        echo "Checking generated certificates..."
+        ls -la "$CERT_DIR"
+
+        test -s "$CERT_DIR/ca.crt"
+        test -s "$CERT_DIR/server.crt"
+        test -s "$CERT_DIR/server.key"
+        test -s "$CERT_DIR/client.crt"
+        test -s "$CERT_DIR/client.key"
+        test -s "$CERT_DIR/client.pfx"
+        test -s "$CERT_DIR/passwd"
+
+        echo "All certificate files exist."
+
+        echo "Checking broker container..."
+        docker-compose -f "$COMPOSE_FILE" ps
+
+        echo "Checking published ports..."
+        docker port mqtt-broker
+
+        echo "Waiting for MQTT broker ports..."
+
+        for port in 1883 8883 8884; do
+          echo "Waiting for port $port..."
+          READY=false
+
+          for i in $(seq 1 30); do
+            if timeout 2 bash -c "echo > /dev/tcp/127.0.0.1/$port" 2>/dev/null; then
+              READY=true
+              echo "Port $port is available."
+              break
+            fi
+
+            sleep 2
+          done
+
+          if [ "$READY" != "true" ]; then
+            echo "ERROR: MQTT port $port did not become available."
+            docker-compose -f "$COMPOSE_FILE" ps
+            docker-compose -f "$COMPOSE_FILE" logs
+            exit 1
+          fi
+        done
+
+        echo "Checking MQTT broker authentication..."
+
+        docker exec mqtt-broker sh -c '
+          mosquitto_sub \
+            -h localhost \
+            -p 1883 \
+            -t ci/auth-check \
+            -C 1 \
+            -W 10 \
+            -u testuser \
+            -P testpass &
+          SUB_PID=$!
+
+          sleep 1
+
+          mosquitto_pub \
+            -h localhost \
+            -p 1883 \
+            -t ci/auth-check \
+            -m authentication-ok \
+            -u testuser \
+            -P testpass
+
+          wait "$SUB_PID"
+        '
+
+        echo "MQTT authentication test passed."
+
+        echo "Mosquitto broker logs:"
+        docker logs mqtt-broker
+
+        echo "MQTT broker is ready."
+
     secrets:
       badge_service_api_key: ${{ secrets.BADGE_SERVICE_API_KEY }}
       test_feed_api_key: ${{ secrets.TASKS_TEST_FEED_API_KEY }}

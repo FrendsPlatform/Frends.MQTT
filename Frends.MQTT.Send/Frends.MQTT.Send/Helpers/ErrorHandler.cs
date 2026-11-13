@@ -17,7 +17,7 @@ internal static class ErrorHandler
     /// When true, an OperationCanceledException is rethrown immediately.
     /// When false, cancellation is handled like any other failure.
     /// </param>
-    /// <returns>A failed Result object when the exception is handled instead of rethrown.</returns>
+    /// <returns> A failed Result object when the exception is handled instead of rethrown. </returns>
     internal static Result Handle(this Exception exception, Options options, bool throwCanceled = true)
     {
         ThrowIfCanceled(exception, throwCanceled);
@@ -31,7 +31,7 @@ internal static class ErrorHandler
         if (throwCanceled && exception is OperationCanceledException) throw exception;
     }
 
-    private static void ThrowBaseException(Exception exception, string? customMessage = null)
+    private static void ThrowBaseException(Exception exception, string customMessage = "")
     {
         if (string.IsNullOrEmpty(customMessage))
             throw new Exception(exception.Message, exception);
@@ -39,7 +39,7 @@ internal static class ErrorHandler
         throw new Exception(customMessage, exception);
     }
 
-    private static Result ReturnResult(Exception exception, string? customMessage = null)
+    private static Result ReturnResult(Exception exception, string customMessage = "")
     {
         var errorMessage = string.IsNullOrEmpty(customMessage)
             ? exception.Message
