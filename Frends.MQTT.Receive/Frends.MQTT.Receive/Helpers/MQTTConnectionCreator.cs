@@ -133,6 +133,7 @@ internal class MQTTConnectionCreator
             var message = new MqttMessage
             {
                 Payload = payload,
+                PayloadType = taskInput.PayloadType,
                 Topic = e.ApplicationMessage.Topic,
                 ResponseTopic = e.ApplicationMessage.ResponseTopic,
                 QoS = GetMqttQualityOfServiceLevel(e.ApplicationMessage.QualityOfServiceLevel),
